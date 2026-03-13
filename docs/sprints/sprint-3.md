@@ -40,6 +40,13 @@
 
 ---
 
+### 기술 구현력 보완 — 레이어 분리 + 품질 인프라 (2026-03-13)
+- **결과**: 기술 구현력 항목 체계적 보완. `IAnalyzer` / `IFolderScanner` 인터페이스 신설로 UI↔Analysis 레이어 의존성 역전 적용. `Directory.Packages.props`로 NuGet 버전 중앙 집중 관리. `ARCHITECTURE.md`로 레이어 다이어그램·코드 증거 문서화.
+- **구현**: `Analysis/IAnalyzer.cs`, `Analysis/IFolderScanner.cs` 인터페이스 생성. `MainForm.cs`에서 `IFolderScanner scanner = new FolderScanner()` / `IAnalyzer analyzer = new RoslynAnalyzer()`로 변경. 전 모델·분석 클래스에 XML 문서 주석(`///`) 추가. `Directory.Packages.props` 생성 + 양 csproj에서 버전 속성 제거.
+- **이슈/결정**: S2-05(Search), S2-06(Tooltip)이 이전 스프린트에서 이미 구현 완료 상태임을 확인 → ROADMAP 체크박스만 업데이트.
+
+---
+
 ## Sprint 3 완료 기준 달성 현황
 
 | 기준 | 결과 |
@@ -48,3 +55,8 @@
 | 코드 스멜 지표가 노드 크기/색상으로 시각화된다 | ✅ |
 | 팬 드래그 후 뷰포트가 유지된다 | ✅ |
 | 리빌드 시 줌 레벨이 유지된다 | ✅ |
+| IAnalyzer / IFolderScanner 인터페이스로 레이어 분리가 강제된다 | ✅ |
+| Directory.Packages.props로 NuGet 버전이 중앙 관리된다 | ✅ |
+| 전 public API에 XML 문서 주석이 존재한다 | ✅ |
+| ARCHITECTURE.md에 레이어 다이어그램과 코드 증거가 문서화된다 | ✅ |
+| S2-05 Search / S2-06 Tooltip 완료 확인 | ✅ |
