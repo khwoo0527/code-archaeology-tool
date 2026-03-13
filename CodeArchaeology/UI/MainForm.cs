@@ -4,6 +4,7 @@ public partial class MainForm : Form
 {
     private string _lastFolderPath = string.Empty;
     private string _currentSearch  = string.Empty;
+    private string _focusNodeId    = string.Empty;
     private Models.AnalysisResult? _analysisResult;
     private Microsoft.Msagl.GraphViewerGdi.GViewer? _gViewer;
 
@@ -243,7 +244,7 @@ public partial class MainForm : Form
     private void RebuildGraph(Models.AnalysisResult result)
     {
         var renderer = new Rendering.MsaglRenderer();
-        _gViewer = renderer.BuildViewer(result, _currentSearch);
+        _gViewer = renderer.BuildViewer(result, _currentSearch, _focusNodeId);
         _gViewer.ToolBarIsVisible = false;
         _gViewer.MouseClick += gViewer_MouseClick;
         _gViewer.MouseMove  += gViewer_MouseMove;
@@ -303,14 +304,28 @@ public partial class MainForm : Form
         if (_gViewer?.ObjectUnderMouseCursor is Microsoft.Msagl.Drawing.IViewerNode viewerNode
             && _analysisResult != null)
         {
-            var nodeId = viewerNode.Node.Id;
+            var nodeId   = viewerNode.Node.Id;
             var typeNode = _analysisResult.Nodes.FirstOrDefault(n => n.FullName == nodeId);
             if (typeNode != null)
             {
-                ShowClassInfo(typeNode);
+                // 같은 노드 재클릭 → 포커스 해제
+                if (_focusNodeId == typeNode.Name)
+                {
+                    _focusNodeId = string.Empty;
+                    ClearClassInfo();
+                }
+                else
+                {
+                    _focusNodeId = typeNode.Name;
+                    ShowClassInfo(typeNode);
+                }
+                RebuildGraphFiltered();
                 return;
             }
         }
+        // 빈 곳 클릭 → 포커스 해제
+        _focusNodeId = string.Empty;
+        RebuildGraphFiltered();
         ClearClassInfo();
     }
 

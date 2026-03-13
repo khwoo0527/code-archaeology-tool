@@ -85,7 +85,7 @@ Phase 4에서 이월된 항목 매핑:
 
 | 태스크 | 상태 | 메모 |
 |--------|------|------|
-| S2-EX-01. 노드 클릭 포커스 모드 | 예정 | 클릭 노드 + 1-hop 강조, 나머지 dimming |
+| S2-EX-01. 노드 클릭 포커스 모드 | ✅ 완료 | 클릭 노드 + 1-hop 강조, 나머지 dimming. 재클릭/빈 곳 클릭 시 포커스 해제 |
 | S2-EX-02. 순환 의존성 감지 | 예정 | DFS 사이클 탐지 + 빨간 엣지 |
 | S2-EX-03. struct / record / enum 지원 | 예정 | TypeKind 확장, 노드 모양 구분 |
 | S2-EX-04. Export PNG | 예정 | GViewer Bitmap 캡처 + SaveFileDialog |

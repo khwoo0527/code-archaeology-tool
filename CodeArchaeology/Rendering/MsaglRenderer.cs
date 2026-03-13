@@ -22,7 +22,7 @@ public class MsaglRenderer
     private static readonly Microsoft.Msagl.Drawing.Color DimBorder    = new(58, 58, 62);
     private static readonly Microsoft.Msagl.Drawing.Color DimText      = new(75, 75, 80);
 
-    public GViewer BuildViewer(AnalysisResult result, string searchQuery = "")
+    public GViewer BuildViewer(AnalysisResult result, string searchQuery = "", string focusNodeId = "")
     {
         var graph = new Graph("dependency")
         {
@@ -43,15 +43,29 @@ public class MsaglRenderer
             .ToDictionary(g => g.Key, g => g.First().FullName);
 
         var hasSearch = !string.IsNullOrWhiteSpace(searchQuery);
+        var hasFocus  = !string.IsNullOrWhiteSpace(focusNodeId);
+
+        // 포커스 모드: 클릭 노드 + 1-hop 이웃 집합
+        HashSet<string> focusSet = new();
+        if (hasFocus)
+        {
+            focusSet.Add(focusNodeId);
+            foreach (var edge in result.Edges)
+            {
+                if (edge.Source == focusNodeId) focusSet.Add(edge.Target);
+                if (edge.Target == focusNodeId) focusSet.Add(edge.Source);
+            }
+        }
 
         foreach (var node in result.Nodes)
         {
             var dn = graph.AddNode(node.FullName);
             dn.LabelText = node.FullName;
 
-            var isMatch = !hasSearch ||
+            var isMatch = (!hasSearch ||
                 node.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                node.FullName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
+                node.FullName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+                && (!hasFocus || focusSet.Contains(node.Name));
 
             if (isMatch)
             {
@@ -98,21 +112,32 @@ public class MsaglRenderer
 
             var de = graph.AddEdge(sourceId, targetId);
 
-            switch (edge.Type)
+            var edgeDimmed = hasFocus &&
+                (!focusSet.Contains(edge.Source) || !focusSet.Contains(edge.Target));
+
+            if (edgeDimmed)
             {
-                case EdgeType.Inheritance:
-                    de.Attr.Color = EdgeInherit;
-                    de.Attr.LineWidth = 1.5;
-                    break;
-                case EdgeType.InterfaceImpl:
-                    de.Attr.Color = EdgeIface;
-                    de.Attr.AddStyle(Style.Dashed);
-                    de.Attr.LineWidth = 1.5;
-                    break;
-                case EdgeType.FieldDependency:
-                    de.Attr.Color = EdgeField;
-                    de.Attr.LineWidth = 1;
-                    break;
+                de.Attr.Color = DimBorder;
+                de.Attr.LineWidth = 0.5;
+            }
+            else
+            {
+                switch (edge.Type)
+                {
+                    case EdgeType.Inheritance:
+                        de.Attr.Color = EdgeInherit;
+                        de.Attr.LineWidth = 1.5;
+                        break;
+                    case EdgeType.InterfaceImpl:
+                        de.Attr.Color = EdgeIface;
+                        de.Attr.AddStyle(Style.Dashed);
+                        de.Attr.LineWidth = 1.5;
+                        break;
+                    case EdgeType.FieldDependency:
+                        de.Attr.Color = EdgeField;
+                        de.Attr.LineWidth = 1;
+                        break;
+                }
             }
         }
 
