@@ -52,8 +52,15 @@ partial class MainForm
             Font      = new Font("Segoe UI", 9f),
             Padding   = new Padding(6, 0, 6, 0)
         };
+        var btnExportPng = new ToolStripButton("  💾  PNG 내보내기  ")
+        {
+            ForeColor = Color.FromArgb(210, 210, 210),
+            Font      = new Font("Segoe UI", 9f),
+            Padding   = new Padding(6, 0, 6, 0)
+        };
         btnOpenFolder.Click += btnOpenFolder_Click;
         btnRefresh.Click    += btnRefresh_Click;
+        btnExportPng.Click  += btnExportPng_Click;
 
         var lblSearch = new ToolStripLabel("🔍")
         {
@@ -78,6 +85,8 @@ partial class MainForm
             btnOpenFolder,
             new ToolStripSeparator(),
             btnRefresh,
+            new ToolStripSeparator(),
+            btnExportPng,
             lblSearch, txtSearch
         });
 

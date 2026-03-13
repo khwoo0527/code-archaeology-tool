@@ -49,6 +49,16 @@ Phase 4에서 이월된 항목 매핑:
 
 ## 진행 로그
 
+### S2-EX-04. Export PNG (2026-03-13)
+- **결과**: 툴바 "💾 PNG 내보내기" 버튼 클릭 → SaveFileDialog → 현재 그래프 화면을 PNG로 저장. 범례(우측 상단 오버레이 패널) 포함 캡처.
+- **구현**: `pnlGraph.RectangleToScreen()`으로 화면 좌표 계산 후 `Graphics.CopyFromScreen()`으로 실제 픽셀 복사. 저장 완료 시 StatusBar에 전체 경로 표시.
+- **이슈/결정**: `DrawToBitmap()` 방식은 WM_PRINT 기반이라 GViewer 위에 오버레이된 `pnlLegend`(BringToFront)를 캡처하지 못함 → `CopyFromScreen`으로 전환하여 화면에 보이는 모든 컨트롤 포함.
+
+### S2-EX-03. struct / record / enum 지원 (2026-03-13)
+- **결과**: C# `struct` / `record` / `enum` 타입이 그래프 노드로 인식됨. 타입별 노드 모양과 색상 구분 — Struct(다이아몬드/녹청), Record(라운드 박스/황토), Enum(헥사곤/자주), Interface(원/보라), Class(박스/파랑). 순환 노드는 모든 타입에서 빨간색 강조.
+- **구현**: `TypeKind` enum에 `Struct`/`Record`/`Enum` 추가. `TypeWalker`에 `VisitStructDeclaration()` / `VisitRecordDeclaration()` / `VisitEnumDeclaration()` 추가. `MsaglRenderer`에 각 타입별 색상 상수 + `switch (node.Kind)` 분기 확장. `_TestSample/Sample.cs`에 `Point`(struct) / `PersonRecord`(record) / `Direction`(enum) 검증 샘플 추가.
+- **이슈/결정**: Dim 모드(검색/포커스)에서 Struct/Record/Enum은 shape 구분 없이 단일 Box로 처리 → 간결성 유지. MSAGL `Shape.Hexagon` 지원 확인 후 채택.
+
 ### S2-06. 노드 호버 툴팁 + UI 개선 (2026-03-13)
 - **결과**: 노드 호버 시 다크 테마 커스텀 툴팁(클래스명/Kind/Namespace/Fields/Methods 수) 표시. 범례 기본 펼침 상태로 시작, 헤더 클릭으로 접기/펼치기 토글. CLASS INFO에서 Fields/Methods 행 클릭 시 실제 이름 목록이 아래로 확장. 검색창 우측 정렬 + 너비 확대. GViewer 내장 툴바 제거 후 그래프 좌상단에 이동 모드 토글 버튼 + 스페이스바 임시 pan 모드 추가.
 - **구현**: `ToolTip.OwnerDraw = true` + `Draw`/`Popup` 이벤트로 다크 배경·파란 액센트 바·커스텀 폰트 렌더링. `pnlLegend` 내부를 `lblLegendHeader`(클릭) + `pnlLegendContent`(Paint)로 분리. `pnlFieldsDetail`/`pnlMethodsDetail` 패널을 DockStyle.Top으로 rowFields/rowMethods 아래 삽입 — 클릭 시 PopulateDetailPanel()로 이름 레이블 동적 생성 + 높이 조정. `KeyPreview = true` + `ProcessCmdKey`/`OnKeyUp`으로 스페이스바 임시 pan 모드 구현.
@@ -87,8 +97,8 @@ Phase 4에서 이월된 항목 매핑:
 |--------|------|------|
 | S2-EX-01. 노드 클릭 포커스 모드 | ✅ 완료 | 클릭 노드 + 1-hop 강조, 나머지 dimming. 재클릭/빈 곳 클릭 시 포커스 해제 |
 | S2-EX-02. 순환 의존성 감지 | ✅ 완료 | DFS 사이클 탐지 + 빨간 엣지/노드, 범례 항목 추가 |
-| S2-EX-03. struct / record / enum 지원 | 예정 | TypeKind 확장, 노드 모양 구분 |
-| S2-EX-04. Export PNG | 예정 | GViewer Bitmap 캡처 + SaveFileDialog |
+| S2-EX-03. struct / record / enum 지원 | ✅ 완료 | TypeKind 확장 — Struct(다이아몬드/녹청), Record(라운드박스/황토), Enum(헥사곤/자주) |
+| S2-EX-04. Export PNG | ✅ 완료 | 화면 직접 캡처(CopyFromScreen)로 범례 포함 PNG 저장 |
 
 ---
 

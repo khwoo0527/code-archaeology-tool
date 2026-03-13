@@ -54,6 +54,35 @@ public partial class MainForm : Form
         _ = RunAnalysisAsync(_lastFolderPath);
     }
 
+    private void btnExportPng_Click(object sender, EventArgs e)
+    {
+        if (_gViewer == null)
+        {
+            SetStatus("내보낼 그래프가 없습니다. 먼저 폴더를 열어주세요.");
+            return;
+        }
+
+        using var dialog = new SaveFileDialog
+        {
+            Title            = "그래프를 PNG로 저장",
+            Filter           = "PNG 이미지 (*.png)|*.png",
+            DefaultExt       = "png",
+            FileName         = $"graph_{DateTime.Now:yyyyMMdd_HHmmss}"
+        };
+
+        if (dialog.ShowDialog() != DialogResult.OK) return;
+
+        // DrawToBitmap은 오버레이 컨트롤(범례 등)을 캡처하지 못함
+        // → 실제 화면 픽셀을 직접 복사
+        var screenRect = pnlGraph.RectangleToScreen(new Rectangle(Point.Empty, pnlGraph.Size));
+        using var bitmap = new System.Drawing.Bitmap(screenRect.Width, screenRect.Height);
+        using (var g = System.Drawing.Graphics.FromImage(bitmap))
+            g.CopyFromScreen(screenRect.Location, Point.Empty, screenRect.Size);
+        bitmap.Save(dialog.FileName, System.Drawing.Imaging.ImageFormat.Png);
+
+        SetStatus($"저장 완료: {dialog.FileName}");
+    }
+
     private async Task RunAnalysisAsync(string folderPath)
     {
         SetStatus($"분석 중... ({Path.GetFileName(folderPath)})");
