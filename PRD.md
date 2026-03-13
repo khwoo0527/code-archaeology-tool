@@ -272,6 +272,7 @@ Sprint 1 MVP에서 **명시적으로 제외**하는 기능:
 ### 9-2. 자동화 단위 테스트
 
 **테스트 프로젝트**: `CodeArchaeology.Tests/` (xUnit 2.9.3 기반)
+**저장소 경로**: https://github.com/khwoo0527/code-archaeology-tool/tree/master/CodeArchaeology.Tests
 
 **테스트 케이스 목록 (총 21개, 전원 통과):**
 
@@ -281,9 +282,45 @@ Sprint 1 MVP에서 **명시적으로 제외**하는 기능:
 | `CycleDetectorTests.cs` | 6개 | 비순환(NoCycle), 직접 순환(A→B→A), 3노드 순환, 선형 체인, 혼합(순환+비순환), 빈 그래프 |
 | `StructRecordEnumTests.cs` | 4개 | struct 파싱, record 파싱, enum 파싱, 전체 타입 혼합 |
 
+**실제 테스트 코드 샘플** (`CodeArchaeology.Tests/RoslynAnalyzerTests.cs`):
+```csharp
+[Fact]
+public void Analyze_SingleClass_ReturnsOneClassNode()
+{
+    var path = WriteTempFile("""
+        namespace MyApp;
+        public class Foo { }
+        """);
+
+    var result = _analyzer.Analyze([path]);
+
+    Assert.Single(result.Nodes);
+    Assert.Equal("Foo", result.Nodes[0].Name);
+    Assert.Equal("MyApp", result.Nodes[0].Namespace);
+    Assert.Equal(TypeKind.Class, result.Nodes[0].Kind);
+}
+
+[Fact]
+public void Analyze_InheritanceEdge_ReturnsInheritanceEdge()
+{
+    var path = WriteTempFile("""
+        public class Animal { }
+        public class Dog : Animal { }
+        """);
+
+    var result = _analyzer.Analyze([path]);
+
+    var edge = result.Edges.Single(e => e.Type == EdgeType.Inheritance);
+    Assert.Equal("Dog", edge.Source);
+    Assert.Equal("Animal", edge.Target);
+}
+```
+
 **테스트 실행 방법:**
 ```bash
 dotnet test CodeArchaeology.Tests --verbosity normal
+# 출력 예시:
+# 통과! - 실패: 0, 통과: 21, 건너뜀: 0, 전체: 21, 기간: 130ms
 ```
 
 **현재 결과:** ✅ 21 / 21 통과
@@ -308,7 +345,9 @@ dotnet test CodeArchaeology.Tests --verbosity normal
 | Publish | `dotnet publish --runtime win-x64 --self-contained` | 단일 실행 파일 생성 |
 | Upload Artifact | `actions/upload-artifact@v4` | 빌드 아티팩트 30일 보관 |
 
-**현재 상태**: [![CI](https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml) — 최근 5회 연속 성공
+**CI 실행 결과 확인**: https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml
+
+**현재 상태**: [![CI](https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml) — 최근 커밋 전원 빌드·테스트 통과 (success)
 
 ---
 

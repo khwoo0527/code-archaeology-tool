@@ -47,6 +47,110 @@
 
 ---
 
+## 핵심 구현 코드 샘플
+
+### 변경 영향 분석 — 역방향 BFS (`UI/MainForm.cs`)
+
+```csharp
+// rootId를 직간접적으로 참조하는 모든 노드 탐색 (역방향 BFS)
+private HashSet<string> ComputeImpactSet(string rootId)
+{
+    var visited = new HashSet<string>();
+    var queue   = new Queue<string>();
+    queue.Enqueue(rootId);
+
+    while (queue.Count > 0)
+    {
+        var current = queue.Dequeue();
+        foreach (var edge in _analysisResult!.Edges)
+        {
+            // edge.Target == current → current를 참조하는 쪽(Source)이 영향 범위
+            if (edge.Target == current && visited.Add(edge.Source))
+                queue.Enqueue(edge.Source);
+        }
+    }
+    visited.Remove(rootId);  // 루트 자신 제외
+    return visited;
+}
+```
+
+### 코드 스멜 — Instability 비례 색상 보간 (`Rendering/MsaglRenderer.cs`)
+
+```csharp
+// Instability 0(안정/파랑) → 1(불안정/빨강) 색상 보간
+if (codeSmellMode && smellMetrics.TryGetValue(node.Name, out var m))
+{
+    var fontSize = 8 + (int)(10.0 * m.Ca / maxCa);  // Ca 비례 폰트 8~18
+    dn.Label.FontSize = fontSize;
+
+    // RGB 보간: 파랑(40,120,200) → 빨강(220,60,30)
+    var r = (int)(40  + 180 * m.Instability);
+    var g = (int)(120 - 60  * m.Instability);
+    var b = (int)(200 - 170 * m.Instability);
+    dn.Attr.FillColor = new Color(
+        (byte)Math.Clamp(r, 0, 255),
+        (byte)Math.Clamp(g, 0, 255),
+        (byte)Math.Clamp(b, 0, 255));
+    continue;
+}
+```
+
+### 레이어 분리 — 인터페이스 기반 의존성 역전 (`Analysis/IAnalyzer.cs`)
+
+```csharp
+// UI 레이어는 구현체(RoslynAnalyzer)가 아닌 이 인터페이스에만 의존
+public interface IAnalyzer
+{
+    AnalysisResult Analyze(IReadOnlyList<string> filePaths);
+}
+
+// MainForm.cs — 구현체 직접 참조 없이 인터페이스를 통해 호출
+IFolderScanner scanner = new Analysis.FolderScanner();
+IAnalyzer analyzer     = new Analysis.RoslynAnalyzer();
+var csFiles = scanner.GetCsFiles(folderPath);
+return (analyzer.Analyze(csFiles), csFiles);
+```
+
+---
+
+## 검증 결과
+
+### 변경 영향 분석 동작 확인
+
+```
+_TestSample 분석 → Animal 노드 클릭 → 🔍 영향 분석 버튼 클릭
+→ Animal(루트, 밝은 주황/굵은 테두리) + Dog/Cat(역방향 BFS 결과, 어두운 주황)
+→ StatusBar: "영향 분석: [Animal] — 영향 범위 2개 클래스"
+→ 영향 경로 엣지(Dog→Animal, Cat→Animal) 주황색 강조
+```
+
+### 코드 스멜 동작 확인
+
+```
+본 프로젝트 폴더 분석 → 📊 코드 스멜 버튼 클릭
+→ Ca 높은 노드(많이 참조되는 클래스): 폰트 크기 대형 + 파란 계열
+→ Ca 낮고 Ce 높은 노드(불안정한 클래스): 폰트 크기 소형 + 빨간 계열
+→ MainForm(Ca=0): 폰트 8, 빨간 계열 / AnalysisResult(Ca=3): 폰트 확대, 파란 계열
+```
+
+### CI/CD 자동화 검증
+
+```
+master push → GitHub Actions 자동 트리거
+Actions 로그: https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml
+결과: dotnet restore → build → test(21/21 통과) → publish → artifact 업로드
+소요 시간: 약 1분 45초
+```
+
+### 단위 테스트 전체 실행 결과
+
+```
+dotnet test CodeArchaeology.Tests --verbosity normal
+통과! - 실패: 0, 통과: 21, 건너뜀: 0, 전체: 21, 기간: 130ms
+```
+
+---
+
 ## Sprint 3 완료 기준 달성 현황
 
 | 기준 | 결과 |

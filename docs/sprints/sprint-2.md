@@ -102,6 +102,120 @@ Phase 4에서 이월된 항목 매핑:
 
 ---
 
+## 핵심 구현 코드 샘플
+
+### 네임스페이스 필터 — BeginInvoke 타이밍 처리 (`UI/MainForm.cs`)
+
+```csharp
+// ItemCheck는 상태 변경 전에 발화 → BeginInvoke로 다음 루프까지 지연
+private void clbNamespaces_ItemCheck(object? sender, ItemCheckEventArgs e)
+{
+    BeginInvoke(RebuildGraphFiltered);
+}
+
+private void RebuildGraphFiltered()
+{
+    var selectedNs = Enumerable.Range(0, clbNamespaces.Items.Count)
+        .Where(i => clbNamespaces.GetItemChecked(i))
+        .Select(i => clbNamespaces.Items[i]!.ToString()!)
+        .ToHashSet();
+
+    var filtered = new Models.AnalysisResult();
+    filtered.Nodes.AddRange(_analysisResult.Nodes.Where(n => selectedNs.Contains(n.Namespace)));
+    // 필터된 노드 집합 기준으로 엣지도 재필터
+    var filteredNames = filtered.Nodes.Select(n => n.Name).ToHashSet();
+    filtered.Edges.AddRange(_analysisResult.Edges
+        .Where(e => filteredNames.Contains(e.Source) && filteredNames.Contains(e.Target)));
+    RebuildGraph(filtered);
+}
+```
+
+### 노드 클릭 → Class Info 패널 업데이트 (`UI/MainForm.cs`)
+
+```csharp
+private void gViewer_MouseClick(object? sender, MouseEventArgs e)
+{
+    if (_wasDragged) { _wasDragged = false; return; }  // 팬 드래그 후 click 차단
+    if (e.Button == MouseButtons.Right) return;
+
+    if (_gViewer?.ObjectUnderMouseCursor is IViewerNode viewerNode)
+    {
+        var typeNode = _analysisResult.Nodes
+            .FirstOrDefault(n => n.FullName == viewerNode.Node.Id);
+        if (typeNode != null)
+        {
+            _focusNodeId = typeNode.Name;
+            ShowClassInfo(typeNode);       // 우측 패널 업데이트
+            RebuildGraphFiltered();        // 1-hop 포커스 강조 재렌더
+        }
+    }
+    else  // 빈 공간 클릭 — 포커스/영향 분석 해제
+    {
+        var hadFocus = !string.IsNullOrEmpty(_focusNodeId);
+        var hadImpact = !string.IsNullOrEmpty(_impactRootId);
+        _focusNodeId = string.Empty;
+        if (hadFocus || hadImpact) RebuildGraphFiltered();
+    }
+}
+```
+
+### 순환 의존성 감지 — DFS back-edge (`Analysis/CycleDetector.cs`)
+
+```csharp
+public static HashSet<(string, string)> FindCycleEdges(AnalysisResult result)
+{
+    var cycleEdges = new HashSet<(string, string)>();
+    var color = new Dictionary<string, int>();  // 0:white, 1:gray, 2:black
+
+    void Dfs(string node)
+    {
+        color[node] = 1;  // gray (방문 중)
+        foreach (var edge in result.Edges.Where(e => e.Source == node))
+        {
+            if (!color.TryGetValue(edge.Target, out var c)) { Dfs(edge.Target); }
+            else if (c == 1)  // gray → back-edge = 순환
+                cycleEdges.Add((edge.Source, edge.Target));
+        }
+        color[node] = 2;  // black (완료)
+    }
+    foreach (var node in result.Nodes)
+        if (!color.ContainsKey(node.Name)) Dfs(node.Name);
+
+    return cycleEdges;
+}
+```
+
+---
+
+## 검증 결과
+
+### 노드 클릭 포커스 모드 확인
+
+```
+_TestSample 분석 → Dog 노드 클릭
+→ Dog(강조) + Animal/IAnimal/Cat(1-hop 이웃, 강조) + 나머지 dim
+→ 우측 CLASS INFO: Name=Dog, Kind=Class, Fields=1, Methods=1
+→ DEPENDENCY METRICS: Ca=0, Ce=3, Instability=1.00
+```
+
+### 순환 의존성 감지 확인
+
+```
+A→B, B→A 순환 구조 분석
+→ A, B 노드 빨간색 강조 (CycleFill)
+→ A→B, B→A 엣지 빨간 실선 (CycleEdge)
+→ StatusBar: "분석 완료 — ..." (정상 완료, 순환도 처리)
+```
+
+### xUnit 단위 테스트 결과
+
+```
+dotnet test --verbosity normal
+통과! - 실패: 0, 통과: 21, 건너뜀: 0, 전체: 21
+```
+
+---
+
 ## Sprint 2 완료 기준
 
 | 기준 | 검증 방법 |

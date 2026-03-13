@@ -183,6 +183,119 @@
 
 ---
 
+## 핵심 구현 코드 샘플
+
+### RoslynAnalyzer — SyntaxWalker 기반 타입 추출 (`Analysis/RoslynAnalyzer.cs`)
+
+```csharp
+// 3단계 분석 파이프라인
+public AnalysisResult Analyze(IReadOnlyList<string> filePaths)
+{
+    // 1단계: 모든 파일에서 노드(타입) 수집
+    foreach (var filePath in filePaths)
+    {
+        try
+        {
+            var code = File.ReadAllText(filePath);
+            var tree = CSharpSyntaxTree.ParseText(code);
+            var walker = new TypeWalker(filePath);
+            walker.Visit(tree.GetCompilationUnitRoot());
+            result.Nodes.AddRange(walker.Nodes);
+        }
+        catch (Exception ex)
+        {
+            result.Errors.Add($"{Path.GetFileName(filePath)}: {ex.Message}");
+        }
+    }
+    // 2단계: partial class 병합 (FullName 기준 GroupBy)
+    var mergedNodes = result.Nodes
+        .GroupBy(n => n.FullName)
+        .Select(g => new TypeNode {
+            FieldCount  = g.Sum(n => n.FieldCount),
+            MethodCount = g.Sum(n => n.MethodCount),
+            FieldNames  = g.SelectMany(n => n.FieldNames).ToList(),
+            MethodNames = g.SelectMany(n => n.MethodNames).ToList()
+        }).ToList();
+    // 3단계: 알려진 타입 집합 확정 후 의존성 엣지 추출
+    var knownTypeNames = result.Nodes.Select(n => n.Name).ToHashSet();
+    foreach (var walker in walkers)
+        result.Edges.AddRange(walker.GetEdges(knownTypeNames));
+}
+
+// 필드 타입 의존성 추출 — GenericNameSyntax 우선 처리
+private static string? ExtractTypeName(TypeSyntax typeSyntax) => typeSyntax switch
+{
+    PredefinedTypeSyntax => null,                          // int, string 스킵
+    GenericNameSyntax generic => generic.TypeArgumentList  // List<OrderService> → "OrderService"
+        .Arguments.Select(ExtractTypeName).FirstOrDefault(n => n != null),
+    SimpleNameSyntax simple   => simple.Identifier.Text,  // OrderService → "OrderService"
+    NullableTypeSyntax nullable => ExtractTypeName(nullable.ElementType),  // T? → T
+    ArrayTypeSyntax array      => ExtractTypeName(array.ElementType),      // T[] → T
+    _ => null
+};
+```
+
+### FolderScanner — bin/obj 제외 재귀 수집 (`Analysis/FolderScanner.cs`)
+
+```csharp
+public IReadOnlyList<string> GetCsFiles(string folderPath) =>
+    Directory.GetFiles(folderPath, "*.cs", SearchOption.AllDirectories)
+             .Where(f => !f.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                           .Any(seg => ExcludedFolders.Contains(seg)))  // bin/obj 제외
+             .ToList();
+```
+
+### MsaglRenderer — 엣지 색상/스타일 구분 (`Rendering/MsaglRenderer.cs`)
+
+```csharp
+// 엣지 타입별 색상·스타일 분기
+switch (edge.Type)
+{
+    case EdgeType.Inheritance:
+        de.Attr.Color     = EdgeInherit;   // 밝은 회색 실선
+        de.Attr.LineWidth = 1.5;
+        break;
+    case EdgeType.InterfaceImpl:
+        de.Attr.Color = EdgeIface;         // 밝은 파랑 점선
+        de.Attr.AddStyle(Style.Dashed);
+        de.Attr.LineWidth = 1.5;
+        break;
+    case EdgeType.FieldDependency:
+        de.Attr.Color     = EdgeField;     // 중간 회색 실선
+        de.Attr.LineWidth = 1;
+        break;
+}
+```
+
+---
+
+## 검증 결과
+
+### `_TestSample/` 분석 결과 (dotnet run 직접 확인)
+
+```
+StatusBar 출력:
+분석 완료 — 클래스: 5개 | 인터페이스: 1개 | .cs 파일: 3개
+
+그래프 노드: Animal(박스), Cat(박스), Dog(박스), IAnimal(타원), Point(다이아몬드), Direction(헥사곤)
+그래프 엣지: Dog→Animal(회색실선), Dog→IAnimal(파랑점선), Cat→Animal(회색실선), Dog→Cat(회색실선)
+```
+
+### 단위 테스트 결과 (`dotnet test`)
+
+```
+통과! - 실패: 0, 통과: 21, 건너뜀: 0, 전체: 21, 기간: 130ms
+```
+
+### 빌드 결과
+
+```
+dotnet build CodeArchaeology.csproj
+경고 0개 / 오류 0개
+```
+
+---
+
 ## Sprint 1 회고 (Retrospective)
 
 ### 잘 된 것
