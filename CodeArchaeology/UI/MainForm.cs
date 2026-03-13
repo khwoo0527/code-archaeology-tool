@@ -428,7 +428,7 @@ public partial class MainForm : Form
         lblLegendHeader.Text     = _legendExpanded ? "범례  ▼" : "범례  ▶";
         pnlLegendContent.Visible = _legendExpanded;
         pnlLegend.Size = _legendExpanded
-            ? new Size(164, 26 + 138)
+            ? new Size(164, 26 + 158)
             : new Size(164, 26);
     }
 
@@ -509,6 +509,11 @@ public partial class MainForm : Form
         using (var pen = new Pen(Color.FromArgb(130, 130, 130), 2f))
             g.DrawLine(pen, xBox, y + 6, xBox + 30, y + 6);
         g.DrawString("필드 의존성", labelFont, textBrush, xText, y);
+        y += 20;
+
+        using (var pen = new Pen(Color.FromArgb(220, 60, 60), 2.5f))
+            g.DrawLine(pen, xBox, y + 6, xBox + 30, y + 6);
+        g.DrawString("순환 의존성", labelFont, new SolidBrush(Color.FromArgb(220, 100, 100)), xText, y);
     }
 
     public void SetStatus(string message) => lblStatus.Text = message;

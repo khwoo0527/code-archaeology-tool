@@ -198,7 +198,7 @@ partial class MainForm
 
         pnlLegend = new Panel
         {
-            Size      = new Size(164, 26 + 138),  // 기본 펼침
+            Size      = new Size(164, 26 + 158),  // 기본 펼침
             BackColor = Color.FromArgb(45, 45, 48),
             Anchor    = AnchorStyles.Top | AnchorStyles.Right,
             Visible   = false

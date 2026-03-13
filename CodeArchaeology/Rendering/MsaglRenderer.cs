@@ -21,6 +21,9 @@ public class MsaglRenderer
     private static readonly Microsoft.Msagl.Drawing.Color DimFill      = new(38, 38, 42);
     private static readonly Microsoft.Msagl.Drawing.Color DimBorder    = new(58, 58, 62);
     private static readonly Microsoft.Msagl.Drawing.Color DimText      = new(75, 75, 80);
+    // 순환 의존성 색상
+    private static readonly Microsoft.Msagl.Drawing.Color CycleEdge    = new(220, 60, 60);
+    private static readonly Microsoft.Msagl.Drawing.Color CycleFill    = new(100, 30, 30);
 
     public GViewer BuildViewer(AnalysisResult result, string searchQuery = "", string focusNodeId = "")
     {
@@ -42,8 +45,11 @@ public class MsaglRenderer
             .GroupBy(n => n.Name)
             .ToDictionary(g => g.Key, g => g.First().FullName);
 
-        var hasSearch = !string.IsNullOrWhiteSpace(searchQuery);
-        var hasFocus  = !string.IsNullOrWhiteSpace(focusNodeId);
+        var hasSearch  = !string.IsNullOrWhiteSpace(searchQuery);
+        var hasFocus   = !string.IsNullOrWhiteSpace(focusNodeId);
+        var cycleEdges = Analysis.CycleDetector.FindCycleEdges(result);
+        var cycleNodes = new HashSet<string>(
+            cycleEdges.SelectMany(e => new[] { e.Source, e.Target }));
 
         // 포커스 모드: 클릭 노드 + 1-hop 이웃 집합
         HashSet<string> focusSet = new();
@@ -72,19 +78,21 @@ public class MsaglRenderer
                 dn.Label.FontColor = NodeText;
                 dn.Label.FontSize = 10;
 
+                var inCycle = cycleNodes.Contains(node.Name);
+
                 if (node.Kind == TypeKind.Interface)
                 {
                     dn.Attr.Shape = Shape.Ellipse;
-                    dn.Attr.FillColor = IfaceFill;
-                    dn.Attr.Color = IfaceBorder;
-                    dn.Attr.LineWidth = 1.5;
+                    dn.Attr.FillColor = inCycle ? CycleFill : IfaceFill;
+                    dn.Attr.Color     = inCycle ? CycleEdge : IfaceBorder;
+                    dn.Attr.LineWidth = inCycle ? 2.5 : 1.5;
                 }
                 else
                 {
                     dn.Attr.Shape = Shape.Box;
-                    dn.Attr.FillColor = ClassFill;
-                    dn.Attr.Color = ClassBorder;
-                    dn.Attr.LineWidth = 1.5;
+                    dn.Attr.FillColor = inCycle ? CycleFill : ClassFill;
+                    dn.Attr.Color     = inCycle ? CycleEdge : ClassBorder;
+                    dn.Attr.LineWidth = inCycle ? 2.5 : 1.5;
                     dn.Attr.XRadius = 3;
                     dn.Attr.YRadius = 3;
                 }
@@ -114,18 +122,24 @@ public class MsaglRenderer
 
             var edgeDimmed = hasFocus &&
                 (!focusSet.Contains(edge.Source) || !focusSet.Contains(edge.Target));
+            var isCycleEdge = cycleEdges.Contains((edge.Source, edge.Target));
 
             if (edgeDimmed)
             {
-                de.Attr.Color = DimBorder;
+                de.Attr.Color     = DimBorder;
                 de.Attr.LineWidth = 0.5;
+            }
+            else if (isCycleEdge)
+            {
+                de.Attr.Color     = CycleEdge;
+                de.Attr.LineWidth = 2.5;
             }
             else
             {
                 switch (edge.Type)
                 {
                     case EdgeType.Inheritance:
-                        de.Attr.Color = EdgeInherit;
+                        de.Attr.Color     = EdgeInherit;
                         de.Attr.LineWidth = 1.5;
                         break;
                     case EdgeType.InterfaceImpl:
@@ -134,7 +148,7 @@ public class MsaglRenderer
                         de.Attr.LineWidth = 1.5;
                         break;
                     case EdgeType.FieldDependency:
-                        de.Attr.Color = EdgeField;
+                        de.Attr.Color     = EdgeField;
                         de.Attr.LineWidth = 1;
                         break;
                 }
