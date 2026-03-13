@@ -39,7 +39,7 @@ public class MsaglRenderer
     private static readonly Microsoft.Msagl.Drawing.Color ImpactEdge       = new(220, 140, 50);
 
     public GViewer BuildViewer(AnalysisResult result, string searchQuery = "", string focusNodeId = "",
-        string impactRootId = "", HashSet<string>? impactSet = null)
+        string impactRootId = "", HashSet<string>? impactSet = null, bool codeSmellMode = false)
     {
         var graph = new Graph("dependency")
         {
@@ -67,6 +67,22 @@ public class MsaglRenderer
         var cycleNodes  = new HashSet<string>(
             cycleEdges.SelectMany(e => new[] { e.Source, e.Target }));
 
+        // 코드 스멜 메트릭 사전 계산 (노드명 → Ca/Ce/Instability)
+        Dictionary<string, (int Ca, int Ce, double Instability)> smellMetrics = new();
+        if (codeSmellMode)
+        {
+            foreach (var node in result.Nodes)
+            {
+                var ca = result.Edges.Count(e => e.Target == node.Name);
+                var ce = result.Edges.Count(e => e.Source == node.Name);
+                var instability = (ca + ce) == 0 ? 0.0 : (double)ce / (ca + ce);
+                smellMetrics[node.Name] = (ca, ce, instability);
+            }
+        }
+        var maxCa = codeSmellMode && smellMetrics.Count > 0
+            ? Math.Max(1, smellMetrics.Values.Max(m => m.Ca))
+            : 1;
+
         // 포커스 모드: 클릭 노드 + 1-hop 이웃 집합
         HashSet<string> focusSet = new();
         if (hasFocus)
@@ -83,6 +99,31 @@ public class MsaglRenderer
         {
             var dn = graph.AddNode(node.FullName);
             dn.LabelText = node.FullName;
+
+            // 코드 스멜 모드: Ca 비례 노드 크기 + Instability 비례 색상
+            if (codeSmellMode && smellMetrics.TryGetValue(node.Name, out var m))
+            {
+                // Ca 비례 폰트 크기 (8 ~ 18)
+                var fontSize = 8 + (int)(10.0 * m.Ca / maxCa);
+                dn.Label.FontSize  = fontSize;
+                dn.Label.FontColor = NodeText;
+                dn.Attr.Shape      = node.Kind == TypeKind.Interface ? Shape.Ellipse : Shape.Box;
+                dn.Attr.LineWidth  = 1.5;
+
+                // Instability 0(안정/파랑) → 1(불안정/빨강) 색상 보간
+                var r = (int)(40  + 180 * m.Instability);
+                var g = (int)(120 - 60  * m.Instability);
+                var b = (int)(200 - 170 * m.Instability);
+                dn.Attr.FillColor = new Microsoft.Msagl.Drawing.Color(
+                    (byte)Math.Clamp(r, 0, 255),
+                    (byte)Math.Clamp(g, 0, 255),
+                    (byte)Math.Clamp(b, 0, 255));
+                dn.Attr.Color = new Microsoft.Msagl.Drawing.Color(
+                    (byte)Math.Clamp(r + 60, 0, 255),
+                    (byte)Math.Clamp(g + 40, 0, 255),
+                    (byte)Math.Clamp(b + 40, 0, 255));
+                continue;
+            }
 
             // 영향 분석 모드가 활성이면 영향 노드 우선 처리
             if (hasImpact)

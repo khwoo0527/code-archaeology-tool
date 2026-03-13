@@ -452,6 +452,19 @@ partial class MainForm
         };
         btnImpact.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 90);
         btnImpact.Click += btnImpact_Click;
+
+        btnCodeSmell = new Button
+        {
+            Text      = "📊 코드 스멜",
+            AutoSize  = true,
+            BackColor = Color.FromArgb(55, 55, 60),
+            ForeColor = Color.FromArgb(210, 210, 210),
+            FlatStyle = FlatStyle.Flat,
+            Font      = new Font("Segoe UI", 9f),
+            Cursor    = Cursors.Hand
+        };
+        btnCodeSmell.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 90);
+        btnCodeSmell.Click += btnCodeSmell_Click;
     }
 
     private SplitContainer splitOuter;
@@ -487,5 +500,6 @@ partial class MainForm
     private ToolStripTextBox txtSearch;
     private Button btnPanMode;
     private Button btnImpact;
+    private Button btnCodeSmell;
     private ToolTip nodeToolTip;
 }

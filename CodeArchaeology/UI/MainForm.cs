@@ -121,6 +121,7 @@ public partial class MainForm : Form
 
     // ── Pan Mode ─────────────────────────────────────────────────────────
 
+    private bool  _codeSmellMode   = false;
     private bool  _panToggled      = false;
     private bool  _spaceHeld       = false;
     private Point _mouseDownPoint  = Point.Empty;
@@ -129,6 +130,21 @@ public partial class MainForm : Form
     // 영향 분석 상태
     private string          _impactRootId = string.Empty;
     private HashSet<string> _impactSet    = new();
+
+    private void btnCodeSmell_Click(object? sender, EventArgs e)
+    {
+        _codeSmellMode = !_codeSmellMode;
+        UpdateCodeSmellButton();
+        RebuildGraphFiltered();
+    }
+
+    private void UpdateCodeSmellButton()
+    {
+        btnCodeSmell.BackColor = _codeSmellMode
+            ? Color.FromArgb(100, 70, 10)
+            : Color.FromArgb(55, 55, 60);
+        btnCodeSmell.Text = _codeSmellMode ? "📊 코드 스멜 해제" : "📊 코드 스멜";
+    }
 
     private void btnPanMode_Click(object? sender, EventArgs e)
     {
@@ -347,7 +363,7 @@ public partial class MainForm : Form
     private void RebuildGraph(Models.AnalysisResult result)
     {
         var renderer = new Rendering.MsaglRenderer();
-        _gViewer = renderer.BuildViewer(result, _currentSearch, _focusNodeId, _impactRootId, _impactSet);
+        _gViewer = renderer.BuildViewer(result, _currentSearch, _focusNodeId, _impactRootId, _impactSet, _codeSmellMode);
         _gViewer.ToolBarIsVisible = false;
         _gViewer.MouseDown  += gViewer_MouseDown;
         _gViewer.MouseClick += gViewer_MouseClick;
@@ -373,10 +389,16 @@ public partial class MainForm : Form
         btnImpact.Visible = true;
         btnImpact.BringToFront();
 
+        btnCodeSmell.Location = new Point(12 + btnPanMode.Width + 8 + btnImpact.Width + 8, 12);
+        pnlGraph.Controls.Add(btnCodeSmell);
+        btnCodeSmell.Visible = true;
+        btnCodeSmell.BringToFront();
+
         // GViewer가 패널에 추가된 후 pan 상태 복원
         ApplyPanMode(_panToggled);
         UpdatePanButton();
         UpdateImpactButton();
+        UpdateCodeSmellButton();
     }
 
     // ── Class Info ───────────────────────────────────────────────────────
@@ -462,14 +484,20 @@ public partial class MainForm : Form
                 return;
             }
         }
-        // 빈 곳 클릭 → 포커스 및 영향 분석 해제
+        // 빈 곳 클릭 → 포커스/영향 분석만 해제. 코드 스멜은 유지.
+        // 실제로 변경된 게 없으면 리빌드 하지 않음 (코드 스멜 뷰 유지)
+        var hadFocus  = !string.IsNullOrEmpty(_focusNodeId);
+        var hadImpact = !string.IsNullOrEmpty(_impactRootId);
+
         _focusNodeId  = string.Empty;
         _impactRootId = string.Empty;
         _impactSet    = new();
         btnImpact.Enabled = false;
         UpdateImpactButton();
-        RebuildGraphFiltered();
         ClearClassInfo();
+
+        if (hadFocus || hadImpact)
+            RebuildGraphFiltered();
     }
 
     private void ShowClassInfo(Models.TypeNode node)
