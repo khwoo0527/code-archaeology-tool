@@ -115,6 +115,9 @@ UI (WinForms) → Analysis (Roslyn) → Model (Graph)
 > Microsoft C# 공식 스타일 가이드 및 .NET 팀 내부 코딩 표준을 기반으로,
 > 이 프로젝트의 가독성·일관성·유지보수성을 위한 규칙을 정의한다.
 > **모든 코드는 아래 규칙을 준수하며, 리뷰 시 체크포인트로 활용한다.**
+>
+> 실제 적용 사례는 [`ARCHITECTURE.md` — 코드 품질 적용 사례](./ARCHITECTURE.md) 섹션에서 확인할 수 있다.
+> 에러 처리(`RoslynAnalyzer.cs`), Null 안전성(`MainForm.cs`), LINQ(`RoslynAnalyzer.cs`), XML 문서 주석(`AnalysisResult.cs`), using 선언(`MainForm.cs`) 등 실제 코드에 일관되게 적용됨.
 
 ---
 

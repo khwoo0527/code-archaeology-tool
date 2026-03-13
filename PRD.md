@@ -139,13 +139,41 @@
 
 ## 4. 기술 스택
 
-| 영역 | 기술 | 버전 |
-|------|------|------|
-| UI 프레임워크 | WinForms | .NET 8 |
-| 코드 분석 | Microsoft.CodeAnalysis.CSharp (Roslyn) | 최신 안정 버전 |
-| 그래프 렌더링 | Microsoft.Msagl | 최신 안정 버전 |
-| 그래프 모델 | Microsoft.Msagl.Core | - |
-| 빌드 도구 | MSBuild / Visual Studio 2022 | - |
+| 영역 | 기술 | 확정 버전 | 선택 이유 |
+|------|------|----------|----------|
+| UI 프레임워크 | WinForms (.NET 8 네이티브) | net8.0-windows | .NET 8에서 WinForms를 공식 지원 (Microsoft.WindowsDesktop.App 포함). 마이그레이션 없이 신규 .NET 8 프로젝트로 시작. |
+| 코드 분석 | Microsoft.CodeAnalysis.CSharp (Roslyn) | 5.3.0 | C# 공식 컴파일러 플랫폼. SemanticModel 없이 SyntaxTree만으로 빠른 정적 분석 가능. |
+| 그래프 레이아웃 | Microsoft.Msagl | 1.1.6 | WinForms 네이티브 GViewer 제공, Sugiyama 계층형 레이아웃 내장. |
+| 그래프 뷰어 | Microsoft.Msagl.GraphViewerGDI | 1.1.7 | WinForms Panel에 직접 임베드 가능한 인터랙티브 뷰어. |
+| 단위 테스트 | xUnit | 2.9.3 | .NET 공식 권장 테스트 프레임워크. |
+| 테스트 실행기 | Microsoft.NET.Test.Sdk | 17.13.0 | `dotnet test` CLI 통합. |
+| 빌드 도구 | MSBuild / .NET 8 SDK | 8.0.x | - |
+
+### 4-1. .NET 8 WinForms 호환성 검증
+
+본 프로젝트는 **.NET Framework → .NET 8 마이그레이션이 아닌 신규 .NET 8 프로젝트**로 시작하였다.
+WinForms on .NET 8의 호환성은 다음 항목으로 검증되었다:
+
+| 항목 | 검증 방법 | 결과 |
+|------|----------|------|
+| WinForms 런타임 | `<UseWindowsForms>true</UseWindowsForms>` 빌드 확인 | ✅ 정상 빌드 |
+| GDI+ 렌더링 | `GViewer`, `Graphics.CopyFromScreen`, `DrawToBitmap` 실행 확인 | ✅ 정상 동작 |
+| Msagl 1.1.6 + .NET 8 | CI `windows-latest` + `net8.0-windows` 빌드 통과 | ✅ 확인 |
+| 단일 실행 파일 | `--self-contained --runtime win-x64 -p:PublishSingleFile=true` | ✅ 배포 가능 |
+
+### 4-2. NuGet 패키지 버전 중앙 관리
+
+모든 NuGet 버전은 **`Directory.Packages.props`** 에서 중앙 집중 관리된다 (`ManagePackageVersionsCentrally=true`).
+각 `.csproj`에서는 버전 없이 `<PackageReference Include="..." />` 만 선언한다.
+
+```xml
+<!-- Directory.Packages.props (저장소 루트) -->
+<PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+<PackageVersion Include="Microsoft.Msagl"               Version="1.1.6" />
+<PackageVersion Include="Microsoft.Msagl.GraphViewerGDI" Version="1.1.7" />
+<PackageVersion Include="xunit"                         Version="2.9.3" />
+<PackageVersion Include="Microsoft.NET.Test.Sdk"        Version="17.13.0" />
+```
 
 ---
 
