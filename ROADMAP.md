@@ -195,7 +195,7 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 
 ---
 
-### - [ ] S-08. 에러 핸들링 `~15분`
+### - [x] S-08. 에러 핸들링 `~15분`
 
 **구현:**
 - 파일별 파싱을 try-catch로 감싸기

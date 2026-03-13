@@ -14,4 +14,9 @@
     <PackageReference Include="Microsoft.Msagl.GraphViewerGDI" Version="1.1.7" />
   </ItemGroup>
 
+  <!-- 테스트 샘플 폴더는 빌드 대상에서 제외 (런타임 분석 대상으로만 사용) -->
+  <ItemGroup>
+    <Compile Remove="_TestSample\**" />
+  </ItemGroup>
+
 </Project>

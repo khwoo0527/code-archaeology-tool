@@ -18,6 +18,18 @@ public class RoslynAnalyzer
             {
                 var code = File.ReadAllText(filePath);
                 var tree = CSharpSyntaxTree.ParseText(code);
+
+                // 문법 오류가 있어도 파싱 가능한 범위까지 분석 (Roslyn 특성)
+                // 단, 에러 파일은 Errors 리스트에 기록하여 StatusBar에 표시
+                var diagnostics = tree.GetDiagnostics()
+                    .Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
+                    .ToList();
+
+                if (diagnostics.Count > 0)
+                {
+                    result.Errors.Add($"{Path.GetFileName(filePath)}: 문법 오류 {diagnostics.Count}건");
+                }
+
                 var root = tree.GetCompilationUnitRoot();
                 var walker = new TypeWalker(filePath);
                 walker.Visit(root);
@@ -26,7 +38,7 @@ public class RoslynAnalyzer
             }
             catch (Exception ex)
             {
-                result.Errors.Add($"{filePath}: {ex.Message}");
+                result.Errors.Add($"{Path.GetFileName(filePath)}: {ex.Message}");
             }
         }
 
