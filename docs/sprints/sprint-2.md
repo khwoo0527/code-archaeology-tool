@@ -42,12 +42,17 @@ Phase 4에서 이월된 항목 매핑:
 | S2-02. 좌측 패널 — Namespace Filter | ✅ 완료 | 2026-03-13 | 체크 해제 시 즉시 그래프 재구성 확인 |
 | S2-03. 좌측 패널 — Error Log | ✅ 완료 | 2026-03-13 | 오너드로우 + 빨간 ● 인디케이터 + All Namespaces 마스터 토글 |
 | S2-04. 우측 패널 — Class Info (노드 클릭 연동) | ✅ 완료 | 2026-03-13 | 카드 UI + TreeView 탈피 + Dependency Metrics 분리 섹션 |
-| S2-05. 툴바 Search | 예정 | - | |
+| S2-05. 툴바 Search | ✅ 완료 | 2026-03-13 | 클래스명·FullName 대소문자 무관 검색, 비매칭 노드 dimming |
 | S2-06. 노드 호버 툴팁 | 예정 | - | |
 
 ---
 
 ## 진행 로그
+
+### S2-05. 툴바 Search (2026-03-13)
+- **결과**: 툴바 검색창 입력 시 매칭 노드(클래스명 또는 FullName 포함)는 정상 색상 유지, 비매칭 노드는 어두운 Dim 색상으로 처리. 검색창 비우면 즉시 전체 복원.
+- **구현**: `ToolStripTextBox txtSearch` 추가. `TextChanged` → `_currentSearch` 갱신 → `RebuildGraphFiltered()` 호출. `MsaglRenderer.BuildViewer(result, searchQuery)` 파라미터 확장 — `node.FullName.Contains(query, OrdinalIgnoreCase)`로 매칭 판단. 비매칭 노드에 DimFill/DimBorder/DimText 적용.
+- **이슈/결정**: 초기 구현은 `node.Name`만 검색 → 네임스페이스 포함 검색("testsample.") 시 미매칭. `node.Namespace`만 추가해도 네임스페이스 문자열 끝에 점이 없어 부분 실패 → `node.FullName`(`Namespace.Name` 조합)으로 통합하여 해결.
 
 ### S2-04. 우측 패널 — Class Info + Dependency Metrics (2026-03-13)
 - **결과**: 노드 클릭 시 CLASS INFO / DEPENDENCY METRICS 두 섹션 카드로 분리 표시. 클래스명(굵게) + Kind/Namespace/File/Fields/Methods/Dependencies 행별 표시. Ca(Afferent) / Ce(Efferent) / Instability(F2) 수치 우측 정렬로 표시.

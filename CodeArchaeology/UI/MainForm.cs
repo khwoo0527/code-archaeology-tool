@@ -3,6 +3,7 @@ namespace CodeArchaeology.UI;
 public partial class MainForm : Form
 {
     private string _lastFolderPath = string.Empty;
+    private string _currentSearch  = string.Empty;
     private Models.AnalysisResult? _analysisResult;
     private Microsoft.Msagl.GraphViewerGdi.GViewer? _gViewer;
 
@@ -86,6 +87,14 @@ public partial class MainForm : Form
         {
             Cursor = Cursors.Default;
         }
+    }
+
+    // ── Search ───────────────────────────────────────────────────────────
+
+    private void txtSearch_TextChanged(object? sender, EventArgs e)
+    {
+        _currentSearch = txtSearch.Text;
+        RebuildGraphFiltered();
     }
 
     // ── Namespace Filter ─────────────────────────────────────────────────
@@ -181,7 +190,7 @@ public partial class MainForm : Form
     private void RebuildGraph(Models.AnalysisResult result)
     {
         var renderer = new Rendering.MsaglRenderer();
-        _gViewer = renderer.BuildViewer(result);
+        _gViewer = renderer.BuildViewer(result, _currentSearch);
         _gViewer.MouseClick += gViewer_MouseClick;
 
         pnlGraph.Controls.Clear();

@@ -17,8 +17,12 @@ public class MsaglRenderer
     private static readonly Microsoft.Msagl.Drawing.Color EdgeInherit  = new(200, 200, 200); // 밝은 회색 (다크bg 위 가시성)
     private static readonly Microsoft.Msagl.Drawing.Color EdgeIface    = new(100, 160, 255); // 밝은 파랑 점선
     private static readonly Microsoft.Msagl.Drawing.Color EdgeField    = new(120, 120, 140); // 중간 회색
+    // 검색 dimming 색상
+    private static readonly Microsoft.Msagl.Drawing.Color DimFill      = new(38, 38, 42);
+    private static readonly Microsoft.Msagl.Drawing.Color DimBorder    = new(58, 58, 62);
+    private static readonly Microsoft.Msagl.Drawing.Color DimText      = new(75, 75, 80);
 
-    public GViewer BuildViewer(AnalysisResult result)
+    public GViewer BuildViewer(AnalysisResult result, string searchQuery = "")
     {
         var graph = new Graph("dependency")
         {
@@ -38,28 +42,52 @@ public class MsaglRenderer
             .GroupBy(n => n.Name)
             .ToDictionary(g => g.Key, g => g.First().FullName);
 
+        var hasSearch = !string.IsNullOrWhiteSpace(searchQuery);
+
         foreach (var node in result.Nodes)
         {
             var dn = graph.AddNode(node.FullName);
             dn.LabelText = node.FullName;
-            dn.Label.FontColor = NodeText;
-            dn.Label.FontSize = 10;
 
-            if (node.Kind == TypeKind.Interface)
+            var isMatch = !hasSearch ||
+                node.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                node.FullName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
+
+            if (isMatch)
             {
-                dn.Attr.Shape = Shape.Ellipse;
-                dn.Attr.FillColor = IfaceFill;
-                dn.Attr.Color = IfaceBorder;
-                dn.Attr.LineWidth = 1.5;
+                dn.Label.FontColor = NodeText;
+                dn.Label.FontSize = 10;
+
+                if (node.Kind == TypeKind.Interface)
+                {
+                    dn.Attr.Shape = Shape.Ellipse;
+                    dn.Attr.FillColor = IfaceFill;
+                    dn.Attr.Color = IfaceBorder;
+                    dn.Attr.LineWidth = 1.5;
+                }
+                else
+                {
+                    dn.Attr.Shape = Shape.Box;
+                    dn.Attr.FillColor = ClassFill;
+                    dn.Attr.Color = ClassBorder;
+                    dn.Attr.LineWidth = 1.5;
+                    dn.Attr.XRadius = 3;
+                    dn.Attr.YRadius = 3;
+                }
             }
             else
             {
-                dn.Attr.Shape = Shape.Box;
-                dn.Attr.FillColor = ClassFill;
-                dn.Attr.Color = ClassBorder;
-                dn.Attr.LineWidth = 1.5;
-                dn.Attr.XRadius = 3;
-                dn.Attr.YRadius = 3;
+                dn.Label.FontColor = DimText;
+                dn.Label.FontSize = 10;
+                dn.Attr.Shape = node.Kind == TypeKind.Interface ? Shape.Ellipse : Shape.Box;
+                dn.Attr.FillColor = DimFill;
+                dn.Attr.Color = DimBorder;
+                dn.Attr.LineWidth = 1;
+                if (node.Kind != TypeKind.Interface)
+                {
+                    dn.Attr.XRadius = 3;
+                    dn.Attr.YRadius = 3;
+                }
             }
         }
 

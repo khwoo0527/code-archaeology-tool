@@ -26,7 +26,26 @@ partial class MainForm
         var btnRefresh    = new ToolStripButton("새로고침");
         btnOpenFolder.Click += btnOpenFolder_Click;
         btnRefresh.Click    += btnRefresh_Click;
-        toolStrip.Items.AddRange(new ToolStripItem[] { btnOpenFolder, btnRefresh });
+
+        var lblSearch = new ToolStripLabel("검색:")
+        {
+            ForeColor = Color.FromArgb(200, 200, 200)
+        };
+        txtSearch = new ToolStripTextBox
+        {
+            Width       = 180,
+            BackColor   = Color.FromArgb(45, 45, 48),
+            ForeColor   = Color.FromArgb(220, 220, 220),
+            BorderStyle = BorderStyle.FixedSingle
+        };
+        txtSearch.TextChanged += txtSearch_TextChanged;
+
+        toolStrip.Items.AddRange(new ToolStripItem[]
+        {
+            btnOpenFolder, btnRefresh,
+            new ToolStripSeparator(),
+            lblSearch, txtSearch
+        });
 
         // ── StatusStrip ──────────────────────────────────────────────────
         var statusStrip = new StatusStrip
@@ -327,4 +346,5 @@ partial class MainForm
     private ToolStripStatusLabel lblStatus;
     private ToolStripStatusLabel lblError;
     private ToolStripStatusLabel lblFolderPath;
+    private ToolStripTextBox txtSearch;
 }
