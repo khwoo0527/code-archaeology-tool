@@ -72,7 +72,7 @@ UI Layer (WinForms)  -->  Analysis Layer (Roslyn)  -->  Model Layer (Graph)
 
 ## [셋업] 프로젝트 기반 구성
 
-### - [ ] S-01. 솔루션 생성 + NuGet 설치 `~30분`
+### - [x] S-01. 솔루션 생성 + NuGet 설치 `~30분`
 
 **구현:**
 - Visual Studio 2022 → WinForms App (.NET 8) 프로젝트 생성
