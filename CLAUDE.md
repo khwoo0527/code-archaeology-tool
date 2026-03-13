@@ -112,10 +112,184 @@ UI (WinForms) → Analysis (Roslyn) → Model (Graph)
 
 ## 8. 코드 컨벤션
 
-- **언어**: C# 12 (.NET 8)
-- **네이밍**: PascalCase (클래스/메서드), camelCase (로컬 변수), `_camelCase` (private 필드)
-- **파일 1개 = 클래스 1개** 원칙
-- 주석은 비즈니스 의도가 불분명한 곳에만 작성 (자명한 코드에는 생략)
+> Microsoft C# 공식 스타일 가이드 및 .NET 팀 내부 코딩 표준을 기반으로,
+> 이 프로젝트의 가독성·일관성·유지보수성을 위한 규칙을 정의한다.
+> **모든 코드는 아래 규칙을 준수하며, 리뷰 시 체크포인트로 활용한다.**
+
+---
+
+### 8-1. 언어 및 플랫폼
+
+- **언어**: C# 12 / .NET 8
+- **Nullable**: 프로젝트 전체 `<Nullable>enable</Nullable>` — null 가능성은 반드시 `?`로 명시
+- **ImplicitUsings**: `enable` — `System`, `System.Collections.Generic` 등 전역 using 자동 포함
+- **최신 문법 적극 활용**:
+  - `var` (타입 명확한 경우), `using` 선언, target-typed `new()`, 파일 범위 네임스페이스
+  - Pattern matching (`is`, `switch` expression), null 병합 (`??`, `??=`), `is not null`
+  - 단일 표현식 메서드 `=>` (람다 바디)
+
+---
+
+### 8-2. 네이밍 규칙
+
+| 대상 | 규칙 | 예시 |
+|------|------|------|
+| 클래스 / 구조체 / 레코드 | PascalCase | `TypeNode`, `AnalysisResult` |
+| 인터페이스 | `I` + PascalCase | `IFolderScanner`, `IAnalyzer` |
+| Enum 타입 / 값 | PascalCase | `EdgeType`, `Inheritance` |
+| 메서드 / 프로퍼티 / 이벤트 | PascalCase | `GetCsFiles()`, `FullName`, `OnAnalysisComplete` |
+| private / protected 필드 | `_camelCase` | `_lastFolderPath`, `_nodes` |
+| 로컬 변수 / 파라미터 | camelCase | `folderPath`, `nodeList`, `sourceFile` |
+| 상수 (`const` / `static readonly`) | PascalCase | `MaxNodeCount`, `DefaultLayout` |
+| 제네릭 타입 파라미터 | `T` 또는 `T` + 설명 | `T`, `TResult`, `TNode` |
+| bool 변수 / 프로퍼티 | `is` / `has` / `can` 접두사 | `isVisible`, `hasErrors`, `canRefresh` |
+
+> **이름은 축약하지 않는다.** `mgr` → `manager`, `btn` → `button` (단, 관용적 약어 `Id`, `Url`, `Html` 등은 허용)
+
+---
+
+### 8-3. 파일 및 프로젝트 구조
+
+- **파일 1개 = 타입 1개** — 클래스, 인터페이스, enum 각각 별도 파일
+- **파일명 = 타입명** (예: `TypeNode.cs` → `class TypeNode`)
+- **파일 범위 네임스페이스** 사용 (중괄호 없이 한 줄로):
+  ```csharp
+  namespace CodeArchaeology.Models;   // ✅
+  namespace CodeArchaeology.Models { } // ❌
+  ```
+- **네임스페이스**: `CodeArchaeology.{레이어}` 형식
+  - `CodeArchaeology.Models` / `CodeArchaeology.Analysis` / `CodeArchaeology.Rendering` / `CodeArchaeology.UI`
+- **using 정렬 순서** (자동 정렬 기준):
+  1. `System.*`
+  2. 서드파티 (`Microsoft.CodeAnalysis.*`, `Microsoft.Msagl.*`)
+  3. 프로젝트 내부 (`CodeArchaeology.*`)
+
+---
+
+### 8-4. 코드 스타일
+
+#### 중괄호
+- **항상 Allman 스타일** — 중괄호는 반드시 새 줄에
+  ```csharp
+  // ✅
+  if (condition)
+  {
+      DoSomething();
+  }
+  // ❌
+  if (condition) { DoSomething(); }
+  ```
+- 단, 단일 표현식 프로퍼티·메서드는 람다 바디 허용:
+  ```csharp
+  public string FullName => $"{Namespace}.{Name}";   // ✅
+  ```
+
+#### 접근 제한자
+- **항상 명시** — `private`, `public` 생략 금지
+- 순서: `접근제한자 → static → readonly → 타입 → 이름`
+  ```csharp
+  private static readonly int MaxCount = 100;   // ✅
+  ```
+
+#### var 사용 기준
+```csharp
+var nodes = new List<TypeNode>();          // ✅ 우변에서 타입 명확
+var graph = new Microsoft.Msagl...Graph(); // ✅ 명확
+AnalysisResult result = GetResult();       // ✅ 우변 타입 불명확 — 명시
+```
+
+#### 컬렉션 초기화
+```csharp
+public List<TypeNode> Nodes { get; set; } = new();      // ✅ target-typed new
+public List<string> Errors { get; set; } = new List<string>(); // ❌ 장황
+```
+
+#### 문자열
+- 보간 문자열 우선: `$"{Namespace}.{Name}"` — 단순 `+` 연결 지양
+- 긴 메시지: `string.Format()` 또는 여러 줄 보간 사용
+
+#### 조건문
+- 부정 조건은 early return으로 처리 (중첩 줄이기):
+  ```csharp
+  // ✅ early return
+  if (string.IsNullOrEmpty(folderPath)) return;
+  DoWork(folderPath);
+
+  // ❌ 중첩
+  if (!string.IsNullOrEmpty(folderPath))
+  {
+      DoWork(folderPath);
+  }
+  ```
+- `switch` 대신 `switch expression` 활용 권장
+
+#### LINQ
+- 메서드 체이닝 스타일 우선 (쿼리 구문 지양):
+  ```csharp
+  var classNodes = nodes.Where(n => n.Kind == TypeKind.Class).ToList();  // ✅
+  ```
+- 한 줄이 길어지면 각 메서드를 줄 바꿈:
+  ```csharp
+  var result = nodes
+      .Where(n => n.Kind == TypeKind.Class)
+      .OrderBy(n => n.Name)
+      .ToList();
+  ```
+
+---
+
+### 8-5. 클래스 멤버 선언 순서
+
+같은 클래스 내 멤버는 아래 순서로 선언한다:
+
+1. `const` / `static readonly` 필드
+2. `private` 필드
+3. 생성자
+4. `public` 프로퍼티
+5. `public` 메서드
+6. `private` / `protected` 메서드
+
+---
+
+### 8-6. 주석
+
+- **자명한 코드에는 주석 생략** — 코드 자체가 의도를 드러내야 한다
+- **주석이 필요한 경우**: 비즈니스 로직, 비직관적 결정, 외부 API 제약, 알려진 한계
+  ```csharp
+  // Roslyn SyntaxTree만으로는 외부 타입 판별 불가 — 이름 기반 필터링으로 대체
+  var internalOnly = edges.Where(e => knownTypes.Contains(e.Target));
+  ```
+- `TODO:` / `FIXME:` / `HACK:` 태그 적극 활용 (이슈 추적 용도)
+- Public 클래스·메서드는 `///` XML 문서 주석 권장
+
+---
+
+### 8-7. 예외 및 방어 코드
+
+- **외부 입력 경계에서만 검증** — 내부 메서드 간 과도한 null 체크 지양
+- `try-catch`는 예외를 **절대 무시하지 않는다** — 반드시 `Errors` 리스트 기록 또는 상위 전파
+  ```csharp
+  // ✅
+  try { /* 파일 파싱 */ }
+  catch (Exception ex) { result.Errors.Add($"{filePath}: {ex.Message}"); }
+
+  // ❌ 예외 무시
+  catch (Exception) { }
+  ```
+- 예외 타입은 구체적으로 — `catch (Exception)` 최상위 남용 금지
+- `using` 선언으로 리소스 해제 보장:
+  ```csharp
+  using var dialog = new FolderBrowserDialog();   // ✅ 자동 Dispose
+  ```
+
+---
+
+### 8-8. 비동기 (Async/Await)
+
+- 비동기 메서드명은 `Async` 접미사 필수: `AnalyzeAsync()`, `LoadFilesAsync()`
+- `async void` 는 이벤트 핸들러에서만 허용 (그 외 `async Task` 사용)
+- `Task.Run()`은 CPU 바운드 작업에만 사용 — I/O는 네이티브 `async` API 사용
+- `ConfigureAwait(false)` — UI 컨텍스트가 불필요한 라이브러리 코드에 적용
 
 ---
 
