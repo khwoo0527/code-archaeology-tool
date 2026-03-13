@@ -32,7 +32,7 @@
 
 | 영역 | 기술 | 비고 |
 |------|------|------|
-| UI | WinForms (.NET Framework 4.8) | C# 7.3 지원 |
+| UI | WinForms (.NET 8) | C# 12 지원 |
 | 코드 분석 | Microsoft.CodeAnalysis.CSharp (Roslyn) | SyntaxTree 기반 정적 분석 |
 | 그래프 렌더링 | Microsoft.Msagl + GraphViewerGdi | 계층형(Sugiyama) 레이아웃 |
 | 빌드 | MSBuild / Visual Studio 2022 | |
@@ -112,7 +112,7 @@ UI (WinForms) → Analysis (Roslyn) → Model (Graph)
 
 ## 8. 코드 컨벤션
 
-- **언어**: C# 7.3 (.NET Framework 4.8)
+- **언어**: C# 12 (.NET 8)
 - **네이밍**: PascalCase (클래스/메서드), camelCase (로컬 변수), `_camelCase` (private 필드)
 - **파일 1개 = 클래스 1개** 원칙
 - 주석은 비즈니스 의도가 불분명한 곳에만 작성 (자명한 코드에는 생략)

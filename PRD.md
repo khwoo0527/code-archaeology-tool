@@ -128,7 +128,7 @@
 
 ### 3.2 플랫폼
 - **OS**: Windows 10+
-- **런타임**: .NET Framework 4.8 (별도 설치 불필요)
+- **런타임**: .NET 8
 - **화면 해상도**: 1920×1080 기준 최적화
 
 ### 3.3 코드 품질
@@ -141,7 +141,7 @@
 
 | 영역 | 기술 | 버전 |
 |------|------|------|
-| UI 프레임워크 | WinForms | .NET Framework 4.8 |
+| UI 프레임워크 | WinForms | .NET 8 |
 | 코드 분석 | Microsoft.CodeAnalysis.CSharp (Roslyn) | 최신 안정 버전 |
 | 그래프 렌더링 | Microsoft.Msagl | 최신 안정 버전 |
 | 그래프 모델 | Microsoft.Msagl.Core | - |
