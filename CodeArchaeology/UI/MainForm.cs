@@ -28,7 +28,11 @@ public partial class MainForm : Form
     private void RunAnalysis(string folderPath)
     {
         SetStatus("분석 중...");
-        // S-11에서 파이프라인 연결 예정
+        // TODO S-11: 전체 파이프라인 연결 예정
+
+        // S-04 임시 검증용 — S-11 파이프라인 연결 후 제거
+        var files = Analysis.FolderScanner.GetCsFiles(folderPath);
+        SetStatus($"발견된 .cs 파일: {files.Count}개");
     }
 
     public void SetStatus(string message)

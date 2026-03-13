@@ -133,7 +133,7 @@ class AnalysisResult { List<TypeNode> Nodes; List<DependencyEdge> Edges; List<st
 
 ---
 
-### - [ ] S-04. FolderScanner `~15분`
+### - [x] S-04. FolderScanner `~15분`
 
 **구현** (`Analysis/FolderScanner.cs`):
 ```csharp

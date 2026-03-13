@@ -13,7 +13,7 @@
 | S-01. 솔루션 생성 + NuGet 설치 | ✅ 완료 | 2026-03-13 | |
 | S-02. 폴더 구조 + MainForm 레이아웃 | ✅ 완료 | 2026-03-13 | |
 | S-03. GraphModel 데이터 모델 정의 | ✅ 완료 | 2026-03-13 | |
-| S-04. FolderScanner | 예정 | - | |
+| S-04. FolderScanner | ✅ 완료 | 2026-03-13 | |
 | S-05. RoslynAnalyzer — class 노드 추출 | 예정 | - | |
 | S-06. RoslynAnalyzer — interface 노드 추출 | 예정 | - | |
 | S-07. RoslynAnalyzer — 상속/인터페이스 엣지 추출 | 예정 | - | |
@@ -46,8 +46,8 @@
 ---
 
 ### [S-04] FolderScanner
-- **상태**: 예정
-- **결과**: -
+- **상태**: ✅ 완료 (2026-03-13)
+- **결과**: `.cs` 파일 재귀 수집 구현. StatusBar에 "발견된 .cs 파일: N개" 표시로 UI에서 즉시 확인. 하위 폴더 포함 수집 검증 완료.
 
 ---
 
