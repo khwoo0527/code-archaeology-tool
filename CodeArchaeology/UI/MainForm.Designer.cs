@@ -14,36 +14,70 @@ partial class MainForm
     private void InitializeComponent()
     {
         components = new System.ComponentModel.Container();
+        nodeToolTip = new ToolTip(components)
+        {
+            AutoPopDelay = 8000,
+            InitialDelay = 0,
+            ReshowDelay  = 0,
+            ShowAlways   = true,
+            OwnerDraw    = true
+        };
+        nodeToolTip.Draw   += nodeToolTip_Draw;
+        nodeToolTip.Popup  += nodeToolTip_Popup;
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1400, 860);
-        Text = "Code Archaeology";
-        BackColor = Color.FromArgb(30, 30, 30);
-        Font = new Font("Segoe UI", 9f);
+        ClientSize    = new Size(1400, 860);
+        Text          = "Code Archaeology";
+        BackColor     = Color.FromArgb(30, 30, 30);
+        Font          = new Font("Segoe UI", 9f);
+        KeyPreview    = true;
 
         // ── ToolStrip ────────────────────────────────────────────────────
-        var toolStrip = new ToolStrip { Renderer = new DarkToolStripRenderer() };
-        var btnOpenFolder = new ToolStripButton("폴더 열기");
-        var btnRefresh    = new ToolStripButton("새로고침");
+        var toolStrip = new ToolStrip
+        {
+            Renderer = new DarkToolStripRenderer(),
+            GripStyle = ToolStripGripStyle.Hidden,
+            Padding   = new Padding(4, 0, 4, 0),
+            ImageScalingSize = new Size(16, 16)
+        };
+
+        var btnOpenFolder = new ToolStripButton("  📂  폴더 열기  ")
+        {
+            ForeColor   = Color.FromArgb(210, 210, 210),
+            Font        = new Font("Segoe UI", 9f),
+            Padding     = new Padding(6, 0, 6, 0)
+        };
+        var btnRefresh = new ToolStripButton("  🔄  새로고침  ")
+        {
+            ForeColor = Color.FromArgb(210, 210, 210),
+            Font      = new Font("Segoe UI", 9f),
+            Padding   = new Padding(6, 0, 6, 0)
+        };
         btnOpenFolder.Click += btnOpenFolder_Click;
         btnRefresh.Click    += btnRefresh_Click;
 
-        var lblSearch = new ToolStripLabel("검색:")
+        var lblSearch = new ToolStripLabel("🔍")
         {
-            ForeColor = Color.FromArgb(200, 200, 200)
+            ForeColor = Color.FromArgb(160, 160, 170),
+            Font      = new Font("Segoe UI", 10f),
+            Padding   = new Padding(0, 0, 2, 0),
+            Alignment = ToolStripItemAlignment.Right
         };
         txtSearch = new ToolStripTextBox
         {
-            Width       = 180,
-            BackColor   = Color.FromArgb(45, 45, 48),
+            Width       = 260,
+            BackColor   = Color.FromArgb(50, 50, 55),
             ForeColor   = Color.FromArgb(220, 220, 220),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Font        = new Font("Segoe UI", 9.5f),
+            Alignment   = ToolStripItemAlignment.Right
         };
         txtSearch.TextChanged += txtSearch_TextChanged;
 
         toolStrip.Items.AddRange(new ToolStripItem[]
         {
-            btnOpenFolder, btnRefresh,
+            btnOpenFolder,
             new ToolStripSeparator(),
+            btnRefresh,
             lblSearch, txtSearch
         });
 
@@ -164,14 +198,53 @@ partial class MainForm
 
         pnlLegend = new Panel
         {
-            Size        = new Size(160, 140),
-            BackColor   = Color.FromArgb(45, 45, 48),
-            BorderStyle = BorderStyle.None,
-            Anchor      = AnchorStyles.Top | AnchorStyles.Right,
-            Visible     = false
+            Size      = new Size(164, 26 + 138),  // 기본 펼침
+            BackColor = Color.FromArgb(45, 45, 48),
+            Anchor    = AnchorStyles.Top | AnchorStyles.Right,
+            Visible   = false
         };
-        pnlLegend.Paint += pnlLegend_Paint;
+
+        lblLegendHeader = new Label
+        {
+            Dock      = DockStyle.Top,
+            Height    = 26,
+            Text      = "범례  ▼",
+            BackColor = Color.FromArgb(0, 122, 204),
+            ForeColor = Color.White,
+            Font      = new Font("Segoe UI", 8f, FontStyle.Bold),
+            TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+            Cursor    = Cursors.Hand
+        };
+        lblLegendHeader.Click += lblLegendHeader_Click;
+
+        pnlLegendContent = new Panel
+        {
+            Dock      = DockStyle.Fill,
+            BackColor = Color.FromArgb(45, 45, 48),
+            Visible   = true
+        };
+        pnlLegendContent.Paint += pnlLegendContent_Paint;
+
+        pnlLegend.Controls.Add(pnlLegendContent);
+        pnlLegend.Controls.Add(lblLegendHeader);
         pnlGraph.Controls.Add(pnlLegend);
+
+        btnPanMode = new Button
+        {
+            Size      = new Size(64, 26),
+            Text      = "✋ 이동",
+            BackColor = Color.FromArgb(50, 50, 54),
+            ForeColor = Color.FromArgb(180, 180, 190),
+            FlatStyle = FlatStyle.Flat,
+            Font      = new Font("Segoe UI", 8.5f),
+            Cursor    = Cursors.Default,
+            Visible   = false
+        };
+        btnPanMode.FlatAppearance.BorderColor    = Color.FromArgb(75, 75, 85);
+        btnPanMode.FlatAppearance.CheckedBackColor = Color.FromArgb(0, 100, 180);
+        btnPanMode.Click += btnPanMode_Click;
+        pnlGraph.Controls.Add(btnPanMode);
+
         splitInner.Panel1.Controls.Add(pnlGraph);
 
         // ── Right 패널 — splitRight (Class Info | Dependency Metrics) ────
@@ -208,8 +281,8 @@ partial class MainForm
         var (rowKind,    lblKindVal)    = MakeInfoRow("Kind");
         var (rowNs,      lblNsVal)      = MakeInfoRow("Namespace");
         var (rowFile,    lblFileVal)    = MakeInfoRow("File");
-        var (rowFields,  lblFieldsVal)  = MakeInfoRow("Fields");
-        var (rowMethods, lblMethodsVal) = MakeInfoRow("Methods");
+        var (rowFields,  lblFieldsVal)  = MakeExpandableInfoRow("Fields",    out rowFieldsPanel);
+        var (rowMethods, lblMethodsVal) = MakeExpandableInfoRow("Methods",   out rowMethodsPanel);
         var (rowDeps,    lblDepsVal)    = MakeInfoRow("Dependencies");
 
         lblInfoKindVal    = lblKindVal;
@@ -219,8 +292,32 @@ partial class MainForm
         lblInfoMethodsVal = lblMethodsVal;
         lblInfoDepsVal    = lblDepsVal;
 
+        rowFieldsPanel.Click  += rowFieldsPanel_Click;
+        rowMethodsPanel.Click += rowMethodsPanel_Click;
+        foreach (Control c in rowFieldsPanel.Controls)  c.Click += rowFieldsPanel_Click;
+        foreach (Control c in rowMethodsPanel.Controls) c.Click += rowMethodsPanel_Click;
+
+        pnlFieldsDetail = new Panel
+        {
+            Dock      = DockStyle.Top,
+            Height    = 0,
+            BackColor = Color.FromArgb(40, 40, 44),
+            Padding   = new Padding(20, 2, 8, 2),
+            Visible   = false
+        };
+        pnlMethodsDetail = new Panel
+        {
+            Dock      = DockStyle.Top,
+            Height    = 0,
+            BackColor = Color.FromArgb(40, 40, 44),
+            Padding   = new Padding(20, 2, 8, 2),
+            Visible   = false
+        };
+
         pnlClassInfoBody.Controls.Add(rowDeps);
+        pnlClassInfoBody.Controls.Add(pnlMethodsDetail);
         pnlClassInfoBody.Controls.Add(rowMethods);
+        pnlClassInfoBody.Controls.Add(pnlFieldsDetail);
         pnlClassInfoBody.Controls.Add(rowFields);
         pnlClassInfoBody.Controls.Add(rowFile);
         pnlClassInfoBody.Controls.Add(rowNs);
@@ -275,6 +372,14 @@ partial class MainForm
         TextAlign = System.Drawing.ContentAlignment.MiddleCenter
     };
 
+    private static (Panel row, Label valLabel) MakeExpandableInfoRow(string key, out Panel rowPanel)
+    {
+        var (row, val) = MakeInfoRow(key);
+        row.Cursor = Cursors.Hand;
+        rowPanel = row;
+        return (row, val);
+    }
+
     private static (Panel row, Label valLabel) MakeInfoRow(string key)
     {
         var row = new Panel { Dock = DockStyle.Top, Height = 22, BackColor = Color.Transparent };
@@ -328,6 +433,12 @@ partial class MainForm
     private SplitContainer splitRight;
     private Panel pnlGraph;
     private Panel pnlLegend;
+    private Panel pnlLegendContent;
+    private Label lblLegendHeader;
+    private Panel pnlFieldsDetail;
+    private Panel pnlMethodsDetail;
+    private Panel rowFieldsPanel;
+    private Panel rowMethodsPanel;
     private CheckBox chkAllNamespaces;
     private CheckedListBox clbNamespaces;
     private ListBox lstErrors;
@@ -347,4 +458,6 @@ partial class MainForm
     private ToolStripStatusLabel lblError;
     private ToolStripStatusLabel lblFolderPath;
     private ToolStripTextBox txtSearch;
+    private Button btnPanMode;
+    private ToolTip nodeToolTip;
 }

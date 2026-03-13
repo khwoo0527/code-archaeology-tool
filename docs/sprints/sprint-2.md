@@ -43,11 +43,16 @@ Phase 4에서 이월된 항목 매핑:
 | S2-03. 좌측 패널 — Error Log | ✅ 완료 | 2026-03-13 | 오너드로우 + 빨간 ● 인디케이터 + All Namespaces 마스터 토글 |
 | S2-04. 우측 패널 — Class Info (노드 클릭 연동) | ✅ 완료 | 2026-03-13 | 카드 UI + TreeView 탈피 + Dependency Metrics 분리 섹션 |
 | S2-05. 툴바 Search | ✅ 완료 | 2026-03-13 | 클래스명·FullName 대소문자 무관 검색, 비매칭 노드 dimming |
-| S2-06. 노드 호버 툴팁 | 예정 | - | |
+| S2-06. 노드 호버 툴팁 | ✅ 완료 | 2026-03-13 | OwnerDraw 다크 툴팁 + 접기/펼치기 범례 + Fields/Methods 확장 패널 |
 
 ---
 
 ## 진행 로그
+
+### S2-06. 노드 호버 툴팁 + UI 개선 (2026-03-13)
+- **결과**: 노드 호버 시 다크 테마 커스텀 툴팁(클래스명/Kind/Namespace/Fields/Methods 수) 표시. 범례 기본 펼침 상태로 시작, 헤더 클릭으로 접기/펼치기 토글. CLASS INFO에서 Fields/Methods 행 클릭 시 실제 이름 목록이 아래로 확장. 검색창 우측 정렬 + 너비 확대. GViewer 내장 툴바 제거 후 그래프 좌상단에 이동 모드 토글 버튼 + 스페이스바 임시 pan 모드 추가.
+- **구현**: `ToolTip.OwnerDraw = true` + `Draw`/`Popup` 이벤트로 다크 배경·파란 액센트 바·커스텀 폰트 렌더링. `pnlLegend` 내부를 `lblLegendHeader`(클릭) + `pnlLegendContent`(Paint)로 분리. `pnlFieldsDetail`/`pnlMethodsDetail` 패널을 DockStyle.Top으로 rowFields/rowMethods 아래 삽입 — 클릭 시 PopulateDetailPanel()로 이름 레이블 동적 생성 + 높이 조정. `KeyPreview = true` + `ProcessCmdKey`/`OnKeyUp`으로 스페이스바 임시 pan 모드 구현.
+- **이슈/결정**: `ToolTip.SetToolTip()`은 GViewer 내부 마우스 처리로 인해 동작 안함 → `ToolTip.Show()`로 MouseMove에서 직접 표시. GViewer 내장 툴바 아이콘 배경색이 흰색으로 고정(비트맵 자체) → 툴바 숨기고 독립 이동 버튼으로 대체. `OnKeyUp` 단독으로는 GViewer 포커스 시 미동작 → `KeyPreview = true`로 해결.
 
 ### S2-05. 툴바 Search (2026-03-13)
 - **결과**: 툴바 검색창 입력 시 매칭 노드(클래스명 또는 FullName 포함)는 정상 색상 유지, 비매칭 노드는 어두운 Dim 색상으로 처리. 검색창 비우면 즉시 전체 복원.

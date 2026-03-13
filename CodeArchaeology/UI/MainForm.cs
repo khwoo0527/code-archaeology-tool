@@ -89,6 +89,59 @@ public partial class MainForm : Form
         }
     }
 
+    // ── Pan Mode ─────────────────────────────────────────────────────────
+
+    private bool _panToggled  = false;
+    private bool _spaceHeld   = false;
+
+    private void btnPanMode_Click(object? sender, EventArgs e)
+    {
+        _panToggled = !_panToggled;
+        ApplyPanMode(_panToggled);
+        UpdatePanButton();
+    }
+
+    private void ApplyPanMode(bool pan)
+    {
+        if (_gViewer == null) return;
+        _gViewer.PanButtonPressed = pan;
+        _gViewer.Cursor = pan ? Cursors.Hand : Cursors.Default;
+    }
+
+    private void UpdatePanButton()
+    {
+        var active = _panToggled || _spaceHeld;
+        btnPanMode.BackColor = active
+            ? Color.FromArgb(0, 100, 180)
+            : Color.FromArgb(50, 50, 54);
+        btnPanMode.ForeColor = active
+            ? Color.White
+            : Color.FromArgb(180, 180, 190);
+    }
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (keyData == Keys.Space && !_spaceHeld && _gViewer != null)
+        {
+            _spaceHeld = true;
+            ApplyPanMode(true);
+            UpdatePanButton();
+            return true;
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.Space && _spaceHeld)
+        {
+            _spaceHeld = false;
+            ApplyPanMode(_panToggled);
+            UpdatePanButton();
+        }
+        base.OnKeyUp(e);
+    }
+
     // ── Search ───────────────────────────────────────────────────────────
 
     private void txtSearch_TextChanged(object? sender, EventArgs e)
@@ -191,7 +244,9 @@ public partial class MainForm : Form
     {
         var renderer = new Rendering.MsaglRenderer();
         _gViewer = renderer.BuildViewer(result, _currentSearch);
+        _gViewer.ToolBarIsVisible = false;
         _gViewer.MouseClick += gViewer_MouseClick;
+        _gViewer.MouseMove  += gViewer_MouseMove;
 
         pnlGraph.Controls.Clear();
         pnlGraph.Controls.Add(_gViewer);
@@ -200,9 +255,48 @@ public partial class MainForm : Form
         pnlGraph.Controls.Add(pnlLegend);
         pnlLegend.Visible = true;
         pnlLegend.BringToFront();
+
+        // Controls.Clear() 후 재추가 필요
+        btnPanMode.Location = new Point(12, 12);
+        pnlGraph.Controls.Add(btnPanMode);
+        btnPanMode.Visible = true;
+        btnPanMode.BringToFront();
+        UpdatePanButton();
     }
 
     // ── Class Info ───────────────────────────────────────────────────────
+
+    private string _lastTooltipNodeId = string.Empty;
+
+    private void gViewer_MouseMove(object? sender, MouseEventArgs e)
+    {
+        if (_gViewer == null || _analysisResult == null) return;
+
+        if (_gViewer.ObjectUnderMouseCursor is Microsoft.Msagl.Drawing.IViewerNode viewerNode)
+        {
+            var nodeId   = viewerNode.Node.Id;
+            var typeNode = _analysisResult.Nodes.FirstOrDefault(n => n.FullName == nodeId);
+            if (typeNode != null)
+            {
+                // 같은 노드 위에서 계속 MouseMove 발생 시 중복 Show 방지
+                if (_lastTooltipNodeId == nodeId) return;
+                _lastTooltipNodeId = nodeId;
+
+                var kind = typeNode.Kind == Models.TypeKind.Interface ? "Interface" : "Class";
+                var tip  = $"{typeNode.Name}  [{kind}]\n" +
+                           $"Namespace : {typeNode.Namespace}\n" +
+                           $"Fields    : {typeNode.FieldCount}   Methods : {typeNode.MethodCount}";
+                nodeToolTip.Show(tip, _gViewer, e.X + 16, e.Y + 10, 6000);
+                return;
+            }
+        }
+
+        if (_lastTooltipNodeId != string.Empty)
+        {
+            _lastTooltipNodeId = string.Empty;
+            nodeToolTip.Hide(_gViewer);
+        }
+    }
 
     private void gViewer_MouseClick(object? sender, MouseEventArgs e)
     {
@@ -226,12 +320,14 @@ public partial class MainForm : Form
         lblInfoKindVal.Text    = node.Kind == Models.TypeKind.Interface ? "Interface" : "Class";
         lblInfoNsVal.Text      = node.Namespace;
         lblInfoFileVal.Text    = Path.GetFileName(node.FilePath);
-        lblInfoFieldsVal.Text  = node.FieldCount == 0
-            ? "0"
-            : $"{node.FieldCount}  ({string.Join(", ", node.FieldNames)})";
-        lblInfoMethodsVal.Text = node.MethodCount == 0
-            ? "0"
-            : $"{node.MethodCount}  ({string.Join(", ", node.MethodNames)})";
+        _fieldsExpanded  = false;
+        _methodsExpanded = false;
+        PopulateDetailPanel(pnlFieldsDetail,  node.FieldNames);
+        PopulateDetailPanel(pnlMethodsDetail, node.MethodNames);
+        pnlFieldsDetail.Visible  = false;
+        pnlMethodsDetail.Visible = false;
+        lblInfoFieldsVal.Text  = FormatCountLabel(false, node.FieldCount);
+        lblInfoMethodsVal.Text = FormatCountLabel(false, node.MethodCount);
 
         var deps = _analysisResult!.Edges
             .Where(e => e.Source == node.Name)
@@ -256,6 +352,10 @@ public partial class MainForm : Form
         lblInfoKindVal.Text    = "—";
         lblInfoNsVal.Text      = "—";
         lblInfoFileVal.Text    = "—";
+        _fieldsExpanded  = false;
+        _methodsExpanded = false;
+        pnlFieldsDetail.Visible  = false;
+        pnlMethodsDetail.Visible = false;
         lblInfoFieldsVal.Text  = "—";
         lblInfoMethodsVal.Text = "—";
         lblInfoDepsVal.Text    = "—";
@@ -264,9 +364,99 @@ public partial class MainForm : Form
         lblMetricInstVal.Text  = "—";
     }
 
-    // ── Legend Paint ─────────────────────────────────────────────────────
+    // ── Node Tooltip ─────────────────────────────────────────────────────
 
-    private void pnlLegend_Paint(object? sender, PaintEventArgs e)
+    private void nodeToolTip_Popup(object? sender, PopupEventArgs e)
+    {
+        using var font = new Font("Segoe UI", 9f);
+        var size = TextRenderer.MeasureText(
+            nodeToolTip.GetToolTip(e.AssociatedControl!),
+            font,
+            new Size(280, 0),
+            TextFormatFlags.Left | TextFormatFlags.WordBreak);
+        e.ToolTipSize = new Size(size.Width + 24, size.Height + 20);
+    }
+
+    private void nodeToolTip_Draw(object? sender, DrawToolTipEventArgs e)
+    {
+        var g = e.Graphics;
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+        // 배경
+        g.FillRectangle(new SolidBrush(Color.FromArgb(40, 40, 45)), e.Bounds);
+
+        // 상단 파란 액센트 바
+        g.FillRectangle(new SolidBrush(Color.FromArgb(0, 122, 204)),
+            new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width, 3));
+
+        // 테두리
+        g.DrawRectangle(new Pen(Color.FromArgb(70, 70, 85)),
+            new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1, e.Bounds.Height - 1));
+
+        // 텍스트
+        using var font = new Font("Segoe UI", 9f);
+        TextRenderer.DrawText(g, e.ToolTipText, font,
+            new Rectangle(e.Bounds.X + 10, e.Bounds.Y + 8, e.Bounds.Width - 20, e.Bounds.Height - 12),
+            Color.FromArgb(220, 220, 225),
+            TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.WordBreak);
+    }
+
+    // ── Legend ───────────────────────────────────────────────────────────
+
+    private bool _legendExpanded  = true;
+    private bool _fieldsExpanded  = false;
+    private bool _methodsExpanded = false;
+
+    private void lblLegendHeader_Click(object? sender, EventArgs e)
+    {
+        _legendExpanded = !_legendExpanded;
+        lblLegendHeader.Text     = _legendExpanded ? "범례  ▼" : "범례  ▶";
+        pnlLegendContent.Visible = _legendExpanded;
+        pnlLegend.Size = _legendExpanded
+            ? new Size(164, 26 + 138)
+            : new Size(164, 26);
+    }
+
+    private void rowFieldsPanel_Click(object? sender, EventArgs e)
+    {
+        _fieldsExpanded = !_fieldsExpanded;
+        lblInfoFieldsVal.Text    = FormatCountLabel(_fieldsExpanded, pnlFieldsDetail.Controls.Count);
+        pnlFieldsDetail.Visible  = _fieldsExpanded;
+    }
+
+    private void rowMethodsPanel_Click(object? sender, EventArgs e)
+    {
+        _methodsExpanded = !_methodsExpanded;
+        lblInfoMethodsVal.Text    = FormatCountLabel(_methodsExpanded, pnlMethodsDetail.Controls.Count);
+        pnlMethodsDetail.Visible  = _methodsExpanded;
+    }
+
+    private static string FormatCountLabel(bool expanded, int count)
+        => count == 0 ? "0" : $"{count}  {(expanded ? "▼" : "▶")}";
+
+    private void PopulateDetailPanel(Panel panel, IEnumerable<string> names)
+    {
+        panel.Controls.Clear();
+        const int itemH = 18;
+        int i = 0;
+        foreach (var name in names)
+        {
+            panel.Controls.Add(new Label
+            {
+                Text      = "· " + name,
+                Left      = 0, Top = i * itemH,
+                Width     = panel.Width - 4, Height = itemH,
+                ForeColor = Color.FromArgb(180, 200, 230),
+                Font      = new Font("Segoe UI", 8f),
+                BackColor = Color.Transparent,
+                Anchor    = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            });
+            i++;
+        }
+        panel.Height = Math.Max(0, i * itemH + 6);
+    }
+
+    private void pnlLegendContent_Paint(object? sender, PaintEventArgs e)
     {
         var g = e.Graphics;
         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
