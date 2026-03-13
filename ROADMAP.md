@@ -3,7 +3,7 @@
 ## 개요
 - **목표**: C# 프로젝트 폴더를 열면 Roslyn 기반으로 클래스 구조와 의존성을 자동 분석하고, Microsoft.Msagl 인터랙티브 그래프로 시각화하는 WinForms 데스크톱 도구
 - **전체 예상 기간**: 4 스프린트 (8주, 스프린트당 2주)
-- **현재 진행 단계**: Phase 1 준비 중
+- **현재 진행 단계**: Sprint 2 — UI 개편 및 인터랙션 기능
 - **팀 규모 가정**: 소규모 팀 (2-4명)
 
 ## 진행 상태 범례
@@ -18,10 +18,11 @@
 
 | 항목 | 상태 |
 |------|------|
-| 전체 진행률 | 0% |
-| 현재 Phase | Phase 1 (프로젝트 셋업) |
-| 다음 마일스톤 | Sprint 1 MVP - 기본 그래프 표시 |
-| Sprint Velocity | 측정 전 |
+| 전체 진행률 | ~35% (Sprint 1 완료) |
+| 현재 Sprint | **Sprint 2** — UI 개편 + 인터랙션 |
+| Sprint 1 결과 | Core 12개 + Extension 7개 전원 완료 ✅ |
+| 다음 마일스톤 | Sprint 2 MVP — 3분할 레이아웃 + 노드 클릭 Class Info |
+| Sprint Velocity | Sprint 1: 19 태스크 / 1일 (해커톤) |
 
 ---
 
@@ -299,77 +300,64 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 
 ---
 
-## Phase 4: 노드 인터랙션 및 고급 분석 (Sprint 2)
+## Phase 4: [원래 계획] 노드 인터랙션 및 고급 분석
 
-### 목표
+> ⚠️ **Sprint 1 회고 후 계획 변경됨.** 아래는 Sprint 2로 진입하기 전 원래 로드맵 원문 보존.
+> 변경 사유는 바로 아래 Sprint 2 섹션 도입부에 기술.
+> 원래 계획의 일부 항목(호버 툴팁, 검색, 포커스 모드, 순환 감지 등)은 Sprint 2 / Sprint 3으로 분산 이월됨.
+
+### 원래 목표
 Sprint 1에서 미뤄진 노드 인터랙션 기능을 구현하고, 메서드 호출 의존성·순환 감지·코드 스멜 지표를 추가한다.
 
-### 작업 목록
+### 원래 작업 목록
 
-- [ ] **P4-01. 노드 호버 툴팁**
-  - GViewer의 `ObjectUnderMouseCursor` 이벤트 활용
-  - 노드 위에 마우스 올리면 ToolTip 표시: 네임스페이스 / 필드 수 / 메서드 수 / 파일 경로
+- [ ] **P4-01. 노드 호버 툴팁** — GViewer `ObjectUnderMouseCursor` 이벤트 활용, 네임스페이스/필드수/메서드수/파일 경로 표시 → **Sprint 2 S2-06으로 이월**
+- [ ] **P4-02. 노드 클릭 포커스 모드** — 클릭 노드 + 1-hop 이웃 강조, 나머지 dimming, 빈 영역 클릭 시 해제 → **Sprint 2 S2-EX-01으로 이월**
+- [ ] **P4-03. 검색/필터링 기능** — Toolbar 검색 TextBox, 클래스 이름 입력 시 매칭 노드 하이라이트 → **Sprint 2 S2-05로 이월**
+- [ ] **P4-04. 에러 상세 표시** — StatusBar 에러 영역 클릭 시 상세 창 표시 → **Sprint 2 S2-03으로 이월**
+- [ ] **P4-05. 메서드 호출 의존성 분석** — `VisitInvocationExpression()`, MethodCall EdgeType, 주황색 점선 → **Sprint 3 이월**
+- [ ] **P4-06. 순환 의존성 감지** — DFS/Tarjan 사이클 탐지, 빨간색 엣지, 경고 메시지 → **Sprint 2 S2-EX-02로 이월**
+- [ ] **P4-07. 코드 스멜 지표 시각화** — Afferent/Efferent Coupling, Instability 지표, 노드 크기/색상 인코딩 → **Sprint 3 이월**
+- [ ] **P4-08. struct / record / enum 지원** — TypeKind 확장, 노드 모양 구분 → **Sprint 2 S2-EX-03으로 이월**
 
-- [ ] **P4-02. 노드 클릭 포커스 모드**
-  - 노드 클릭 시: 클릭한 노드 + 1-hop 이웃 노드를 강조 표시
-  - 나머지 노드는 opacity 감소 (흐리게 처리)
-  - 빈 영역 클릭 시: 모든 노드 강조 해제, 원래 상태 복원
+---
 
-- [ ] **P4-03. 검색/필터링 기능**
-  - Toolbar에 검색 TextBox 추가
-  - 클래스 이름 입력 시 해당 노드 하이라이트 (TextChanged 이벤트)
-  - 매칭 노드 강조 + 그래프 중심을 해당 노드로 이동
+## Sprint 2 — [재편] UI 개편 및 인터랙션 기능
 
-- [ ] **P4-04. 에러 상세 표시**
-  - StatusBar 에러 영역 클릭 시 에러 파일 목록 + 메시지 상세 표시 (MessageBox 또는 별도 창)
+> **Phase 4 → Sprint 2 전환 결정 (2026-03-13):**
+> Sprint 1 완료 후 레퍼런스 디자인(`UI느낌.png`)을 검토한 결과, 단일 그래프 패널 위에 기능을 올리는 방식(Phase 4 원래 계획)은 구조적으로 한계가 명확했다.
+> 노드 클릭 정보 패널, 네임스페이스 필터, 에러 로그 등 인터랙션 기능은 전용 사이드바 없이는 UI가 감당하기 어렵다는 판단 하에, **3분할 레이아웃 확립을 Sprint 2의 선결 과제**로 재편.
+> Phase 4의 고급 분석 항목(메서드 호출, 코드 스멜 지표)은 Sprint 3으로 순연.
+> 자세한 진행 기록은 [`docs/sprints/sprint-2.md`](./docs/sprints/sprint-2.md) 참조.
 
-- [ ] **P4-05. 메서드 호출 의존성 분석**
-  - `VisitInvocationExpression()`으로 메서드 호출 추출
-  - 호출자 클래스 -> 피호출자 클래스 의존성 엣지 생성
-  - EdgeType에 `MethodCall` 유형 추가
-  - 시각화: 별도 색상/스타일 (예: 주황색 점선)
+### Core 태스크 (S2-01 ~ S2-06)
 
-- [ ] **P4-06. 순환 의존성 감지**
-  - 그래프에서 Cycle Detection 알고리즘 구현 (DFS 기반 Tarjan 또는 간단 DFS)
-  - 순환이 감지되면 해당 엣지를 빨간색으로 강조 표시
-  - StatusBar 또는 별도 경고 패널에 순환 의존성 경고 메시지 표시
-  - 순환 그룹 클릭 시 관련 노드 하이라이트
+- [ ] **S2-01. UI 3분할 레이아웃** — 좌측 사이드바(190px) + 중앙 그래프 + 우측 사이드바(230px)
+- [ ] **S2-02. 좌측 패널 — Namespace Filter** — 발견된 네임스페이스 체크박스 목록, 체크 변경 시 그래프 즉시 재구성
+- [ ] **S2-03. 좌측 패널 — Error Log** — 분석 오류 파일 목록 상세 표시 (기존 StatusBar 단순 카운트 → 전용 패널)
+- [ ] **S2-04. 우측 패널 — Class Info** — 노드 클릭 시 Name/Namespace/File/Fields/Methods 상세 정보 표시
+- [ ] **S2-05. 툴바 Search** — 클래스 이름 입력 시 매칭 노드 하이라이트 + 비매칭 노드 dimming
+- [ ] **S2-06. 노드 호버 툴팁** — GViewer `ObjectUnderMouseCursor` 활용, 풍부한 메타데이터 표시
 
-- [ ] **P4-07. 코드 스멜 지표 시각화**
-  - 클래스별 지표 계산:
-    - 참조 횟수 (Afferent Coupling, Ca): 다른 클래스가 이 클래스를 참조하는 수
-    - 의존도 지수 (Efferent Coupling, Ce): 이 클래스가 의존하는 다른 클래스 수
-    - 불안정성 지표 (Instability): Ce / (Ca + Ce)
-  - 노드 크기 또는 색상 농도로 지표 시각화
-  - 툴팁에 지표 수치 추가 표시
+### Extension 태스크 (S2-EX)
 
-- [ ] **P4-08. struct / record / enum 지원**
-  - RoslynAnalyzer에 `VisitStructDeclaration()`, `VisitRecordDeclaration()`, `VisitEnumDeclaration()` 추가
-  - TypeKind enum에 Struct, Record, Enum 추가
-  - 노드 모양 또는 색상으로 타입 종류 구분 (예: class=사각형, interface=원, struct=다이아몬드)
+- [ ] **S2-EX-01. 노드 클릭 포커스 모드** — 클릭 노드 + 1-hop 이웃 강조, 나머지 dimming, 빈 영역 클릭 시 해제
+- [ ] **S2-EX-02. 순환 의존성 감지** — DFS 기반 사이클 탐지, 순환 엣지 빨간색 강조, StatusBar 경고
+- [ ] **S2-EX-03. struct / record / enum 지원** — TypeKind 확장, 다이아몬드/오각형 등 노드 모양 구분
+- [ ] **S2-EX-04. Export PNG** — GViewer 렌더링 결과 Bitmap 캡처 후 SaveFileDialog로 저장
 
 ### 완료 기준 (Definition of Done)
-- 노드 호버 시 네임스페이스, 필드수/메서드수, 파일 경로가 툴팁으로 표시된다
-- 노드 클릭 시 포커스 모드가 동작하고, 빈 영역 클릭 시 해제된다
-- 검색 시 매칭 노드가 하이라이트된다
-- 메서드 호출 관계가 별도 색상의 엣지로 그래프에 표시된다
-- 순환 의존성이 존재할 때 빨간색 엣지와 경고 메시지가 표시된다
-- 각 노드의 참조 횟수/의존도 지표가 툴팁에 표시된다
-- struct, record, enum이 그래프에 노드로 표시되고 class/interface와 구분된다
-
-### 검증 시나리오
-```
-1. 메서드 호출이 포함된 샘플 프로젝트 분석 -> 호출 의존성 엣지 표시 확인
-2. 의도적 순환 의존성 포함 샘플 분석 -> 빨간색 경고 엣지 및 메시지 확인
-3. 높은 의존도 클래스의 노드가 시각적으로 두드러지는지 확인
-4. struct/record/enum 포함 프로젝트 분석 -> 타입별 노드 구분 확인
-5. 기존 Sprint 1 기능이 정상 동작하는지 회귀 테스트
-```
+- 3분할 레이아웃이 창 크기 변경에도 안정적으로 동작한다
+- 네임스페이스 체크박스 변경 시 그래프가 즉시 갱신된다
+- 노드 클릭 시 우측 패널에 해당 클래스의 상세 정보가 표시된다
+- 클래스 검색 시 매칭/비매칭 노드가 시각적으로 구분된다
+- 노드 호버 시 툴팁이 표시된다
 
 ### 기술 고려사항
-- 메서드 호출 분석은 SyntaxTree만으로 호출 대상 타입을 정확히 식별하기 어려움 -> SemanticModel 도입 검토 또는 이름 기반 휴리스틱 적용
-- 순환 감지는 방향 그래프 기준 Strongly Connected Components (SCC) 알고리즘 사용
-- record는 .NET 8에서 완전 지원, Roslyn 파서로 구문 분석 가능
+- GViewer는 DockStyle.Fill로 pnlGraph 내부에 삽입되므로 외부 패널 레이아웃과 분리 용이
+- 네임스페이스 필터 변경 시 `AnalysisResult`를 필터링한 새 객체를 MsaglRenderer에 전달하여 그래프 재빌드
+- `ObjectUnderMouseCursor` 반환 타입이 `object`이므로 `IViewerNode` 또는 `DrawingNode` 캐스팅 필요 — 빌드 시 확인
+- 순환 감지는 SCC(Tarjan's Algorithm) 또는 DFS 색상 마킹 방식 중 선택
 
 ---
 
@@ -530,3 +518,17 @@ PRD에 명시되었거나 개발 과정에서 도출될 수 있는 향후 기능
 | 단위 테스트 부재 | Phase 1-3 | Phase 5 |
 | 하드코딩된 색상/스타일 값 | Phase 3 | Phase 5 |
 | 대규모 프로젝트 성능 최적화 | Phase 4 | Phase 6 |
+
+---
+
+## 변경 이력 (Change Log)
+
+> 계획 대비 실제 진행 과정에서 발생한 범위 변경, 설계 결정 전환, 우선순위 조정을 시계열로 기록한다.
+> 코드 레벨의 기술 결정은 `docs/sprints/sprint-N.md`의 이슈/결정 항목에 상세 서술한다.
+
+| 날짜 | 분류 | 항목 | 변경 내용 | 사유 |
+|------|------|------|-----------|------|
+| 2026-03-13 | 범위 확장 | S-EX-01 선구현 | S-EX-01(엣지 색상 구분)을 별도 태스크 없이 S-10 구현 중 함께 처리 | S-10에서 엣지 스타일을 함께 다루는 것이 자연스러워 즉시 구현. 별도 태스크 비용 절감 |
+| 2026-03-13 | 범위 확장 | S-EX-07 추가 | 계획에 없던 Sugiyama TB 레이아웃 전환 + 범례 패널을 Extension에 추가 | 사용자 피드백: 기본 LR 레이아웃으로 클래스 다수 시 가로 팽창·위아래 공백 현상 발생 |
+| 2026-03-13 | 다크 테마 | 다크 UI 적용 | DarkToolStripRenderer + 파란 StatusBar + 노드 배경색 적용 | 사용자 요청: "2026년도에 이 UI는 너무 오래된 느낌" — 모던 개발자 도구 감성으로 전환 |
+| 2026-03-13 | 스프린트 재편 | Phase 4 → Sprint 2 재구성 | Phase 4의 노드 인터랙션 항목들을 UI 개편 중심으로 재우선순위 지정 | 사용자 피드백: 레퍼런스 UI(`UI느낌.png`) 기준으로 3분할 레이아웃이 선행되어야 나머지 인터랙션 기능이 의미 있음. UI 구조 없이 기능만 추가하는 방식은 사용성 측면에서 부적절하다고 판단 |
