@@ -149,7 +149,7 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 
 ---
 
-### - [ ] S-05. RoslynAnalyzer — class 노드 추출 `~30분`
+### - [x] S-05. RoslynAnalyzer — class 노드 추출 `~30분`
 
 **구현** (`Analysis/RoslynAnalyzer.cs`):
 - `CSharpSyntaxTree.ParseText()`로 각 .cs 파일 파싱

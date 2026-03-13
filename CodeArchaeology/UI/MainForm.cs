@@ -28,11 +28,14 @@ public partial class MainForm : Form
     private void RunAnalysis(string folderPath)
     {
         SetStatus("분석 중...");
-        // TODO S-11: 전체 파이프라인 연결 예정
+        // TODO S-11: 전체 파이프라인 연결 후 아래 임시 코드 제거
 
-        // S-04 임시 검증용 — S-11 파이프라인 연결 후 제거
         var files = Analysis.FolderScanner.GetCsFiles(folderPath);
-        SetStatus($"발견된 .cs 파일: {files.Count}개");
+        var analyzer = new Analysis.RoslynAnalyzer();
+        var result = analyzer.Analyze(files);
+
+        var classCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Class);
+        SetStatus($"발견된 클래스: {classCount}개 | .cs 파일: {files.Count}개 | 에러: {result.Errors.Count}개");
     }
 
     public void SetStatus(string message)
