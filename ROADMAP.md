@@ -244,7 +244,7 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 
 ---
 
-### - [ ] S-11. 폴더 열기 파이프라인 전체 연결 `~30분`
+### - [x] S-11. 폴더 열기 파이프라인 전체 연결 `~30분`
 
 **구현:**
 - 폴더 열기 버튼 클릭 → `FolderBrowserDialog`
