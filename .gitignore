@@ -1,5 +1,6 @@
 # Claude Code local settings
 .claude/settings.local.json
 
-# 참고 문서
+# 참고 문서 (로컬 전용)
 참고.txt
+평가기준.txt
