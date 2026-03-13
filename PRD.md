@@ -232,7 +232,50 @@ Sprint 1 MVP에서 **명시적으로 제외**하는 기능:
 - 소규모 (~10 클래스): 직접 작성한 샘플 C# 프로젝트
 - 실제 레거시 코드: 팀 내 실제 C# 프로젝트 폴더 (익명화 가능)
 
-### 9-2. 디자인 검토 프로세스
+### 9-2. 자동화 단위 테스트
+
+**테스트 프로젝트**: `CodeArchaeology.Tests/` (xUnit 2.9.3 기반)
+
+**테스트 케이스 목록 (총 21개, 전원 통과):**
+
+| 파일 | 케이스 수 | 검증 대상 |
+|------|----------|----------|
+| `RoslynAnalyzerTests.cs` | 11개 | 클래스 노드 추출, 인터페이스 노드 추출, 상속 엣지, InterfaceImpl 엣지, 필드 의존성 엣지, partial class 병합, 에러 처리, 네임스페이스 추출 등 |
+| `CycleDetectorTests.cs` | 6개 | 비순환(NoCycle), 직접 순환(A→B→A), 3노드 순환, 선형 체인, 혼합(순환+비순환), 빈 그래프 |
+| `StructRecordEnumTests.cs` | 4개 | struct 파싱, record 파싱, enum 파싱, 전체 타입 혼합 |
+
+**테스트 실행 방법:**
+```bash
+dotnet test CodeArchaeology.Tests --verbosity normal
+```
+
+**현재 결과:** ✅ 21 / 21 통과
+
+---
+
+### 9-3. CI/CD 자동화 파이프라인
+
+**파이프라인 파일**: `.github/workflows/ci.yml`
+
+**트리거 조건**: `master` 브랜치 push 또는 Pull Request
+
+**파이프라인 단계:**
+
+| 단계 | 명령 | 설명 |
+|------|------|------|
+| Checkout | `actions/checkout@v4` | 소스 체크아웃 |
+| Setup .NET 8 | `actions/setup-dotnet@v4` | .NET 8 SDK 설치 |
+| Restore | `dotnet restore` | NuGet 패키지 복원 |
+| Build | `dotnet build --configuration Release` | Release 빌드 |
+| Test | `dotnet test CodeArchaeology.Tests` | **단위 테스트 21개 자동 실행** |
+| Publish | `dotnet publish --runtime win-x64 --self-contained` | 단일 실행 파일 생성 |
+| Upload Artifact | `actions/upload-artifact@v4` | 빌드 아티팩트 30일 보관 |
+
+**현재 상태**: [![CI](https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml) — 최근 5회 연속 성공
+
+---
+
+### 9-4. 디자인 검토 프로세스
 
 **UI 설계 원칙:**
 - **3-클릭 룰**: 핵심 기능(폴더 열기 → 분석 → 그래프 확인)은 3번 클릭 이내
