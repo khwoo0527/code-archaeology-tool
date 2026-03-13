@@ -9,6 +9,24 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        Shown += (_, _) =>
+        {
+            splitOuter.Panel1MinSize = 120;
+            splitOuter.Panel2MinSize = 400;
+            splitOuter.SplitterDistance = 190;
+
+            splitInner.Panel1MinSize = 300;
+            splitInner.Panel2MinSize = 180;
+            splitInner.SplitterDistance = Math.Max(300, splitInner.Width - 230);
+
+            splitLeft.Panel1MinSize = 80;
+            splitLeft.Panel2MinSize = 60;
+            splitLeft.SplitterDistance = splitLeft.Height / 2;
+
+            splitRight.Panel1MinSize = 80;
+            splitRight.Panel2MinSize = 60;
+            splitRight.SplitterDistance = splitRight.Height / 2;
+        };
     }
 
     private void btnOpenFolder_Click(object sender, EventArgs e)

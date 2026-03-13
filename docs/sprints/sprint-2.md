@@ -38,7 +38,7 @@ Phase 4에서 이월된 항목 매핑:
 
 | 태스크 | 상태 | 완료 시각 | 메모 |
 |--------|------|-----------|------|
-| S2-01. UI 3분할 레이아웃 | ✅ 완료 | 2026-03-13 | 좌(190px) + 중앙(Fill) + 우(230px), 다크 테마 일관 적용 |
+| S2-01. UI 3분할 레이아웃 | ✅ 완료 | 2026-03-13 | 4-way SplitContainer(outer/inner/left/right) 전면 리사이즈 가능, 다크 테마 일관 적용 |
 | S2-02. 좌측 패널 — Namespace Filter | ✅ 완료 | 2026-03-13 | 체크 해제 시 즉시 그래프 재구성 확인 |
 | S2-03. 좌측 패널 — Error Log | ✅ 완료 | 2026-03-13 | 오너드로우 + 빨간 ● 인디케이터 + All Namespaces 마스터 토글 |
 | S2-04. 우측 패널 — Class Info (노드 클릭 연동) | ✅ 완료 | 2026-03-13 | 카드 UI + TreeView 탈피 + Dependency Metrics 분리 섹션 |
@@ -64,10 +64,10 @@ Phase 4에서 이월된 항목 매핑:
 - **구현**: `PopulateNamespaceFilter()` — 분석 후 distinct 네임스페이스 수집. `clbNamespaces_ItemCheck` → `BeginInvoke(RebuildGraphFiltered)` — ItemCheck가 상태 변경 전에 발화하는 WinForms 특성 대응.
 - **이슈/결정**: ItemCheck 이벤트 타이밍 문제 — BeginInvoke 없이 바로 호출 시 이전 상태 기준으로 필터링됨. BeginInvoke로 다음 메시지 루프까지 지연 처리.
 
-### S2-01. UI 3분할 레이아웃 (2026-03-13)
-- **결과**: 좌측 사이드바(190px) + 중앙 그래프(Fill) + 우측 사이드바(230px) 구성 완료. 창 리사이즈 안정 확인.
-- **구현**: `MainForm.Designer.cs` 전면 재작성. WinForms Dock 순서 원칙(Fill 마지막 추가) 준수. `MakeSectionHeader()` / `MakeInfoLabel()` 헬퍼로 다크 테마 일관성 확보.
-- **이슈/결정**: 좌측 패널 내 Fill+Top 혼합 구조는 Controls.Add 역순 규칙 필수 — lstErrors(Fill) 먼저, 이후 Top 컨트롤 역순으로 추가.
+### S2-01. UI 3분할 레이아웃 (2026-03-13, 확장 완료)
+- **결과**: 좌/중/우 3분할 + 좌측 내부(Namespace Filter ↕ Error Log) + 우측 내부(Class Info ↕ Dependency Metrics) 총 4개 SplitContainer로 모든 경계 드래그 리사이즈 가능. 창 크기 변경 안정 확인.
+- **구현**: `splitOuter`(좌|우), `splitInner`(그래프|우측), `splitLeft`(네임스페이스|에러), `splitRight`(클래스정보|메트릭) 4-way 중첩 구조. `SplitterDistance`/`Panel*MinSize`는 Shown 이벤트에서 지연 설정 — Designer 초기화 시점에는 컨트롤 크기가 미확정이므로 생성자에서 설정 시 InvalidOperationException 발생.
+- **이슈/결정**: WinForms SplitContainer 기본 너비(~150px)가 Panel1MinSize+Panel2MinSize보다 작으면 초기화 시 예외 발생 → MinSize와 SplitterDistance 모두 Shown 이벤트로 이동. clbNamespaces를 DockStyle.Top(Height 고정)에서 DockStyle.Fill로 변경 — splitLeft.Panel1 내부에서 남은 공간을 채우도록 수정.
 
 ---
 

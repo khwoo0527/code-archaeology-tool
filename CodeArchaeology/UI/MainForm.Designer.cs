@@ -23,16 +23,16 @@ partial class MainForm
         // ── ToolStrip ────────────────────────────────────────────────────
         var toolStrip = new ToolStrip { Renderer = new DarkToolStripRenderer() };
         var btnOpenFolder = new ToolStripButton("폴더 열기");
-        var btnRefresh = new ToolStripButton("새로고침");
+        var btnRefresh    = new ToolStripButton("새로고침");
         btnOpenFolder.Click += btnOpenFolder_Click;
-        btnRefresh.Click += btnRefresh_Click;
+        btnRefresh.Click    += btnRefresh_Click;
         toolStrip.Items.AddRange(new ToolStripItem[] { btnOpenFolder, btnRefresh });
 
         // ── StatusStrip ──────────────────────────────────────────────────
         var statusStrip = new StatusStrip
         {
             BackColor = Color.FromArgb(0, 122, 204),
-            Renderer = new ToolStripProfessionalRenderer(new BlueStatusColorTable())
+            Renderer  = new ToolStripProfessionalRenderer(new BlueStatusColorTable())
         };
         lblStatus = new ToolStripStatusLabel("폴더를 열어 분석을 시작하세요.")
         {
@@ -52,96 +52,138 @@ partial class MainForm
         };
         statusStrip.Items.AddRange(new ToolStripItem[] { lblStatus, lblError, lblSpring, lblFolderPath });
 
-        // ── Left Panel ───────────────────────────────────────────────────
-        pnlLeft = new Panel
+        // ── SplitContainer 외부 (Left | Rest) ────────────────────────────
+        splitOuter = new SplitContainer
         {
-            Dock = DockStyle.Left,
-            Width = 190,
-            BackColor = Color.FromArgb(37, 37, 38)
+            Dock          = DockStyle.Fill,
+            Orientation   = Orientation.Vertical,
+            SplitterWidth = 4,
+            BackColor     = Color.FromArgb(50, 50, 54)
         };
+        splitOuter.Panel1.BackColor = Color.FromArgb(37, 37, 38);
+        splitOuter.Panel2.BackColor = Color.FromArgb(30, 30, 30);
 
+        // ── Left 패널 — splitLeft (Namespace Filter | Error Log) ─────────
+        splitLeft = new SplitContainer
+        {
+            Dock          = DockStyle.Fill,
+            Orientation   = Orientation.Horizontal,
+            SplitterWidth = 4,
+            BackColor     = Color.FromArgb(50, 50, 54)
+        };
+        splitLeft.Panel1.BackColor = Color.FromArgb(37, 37, 38);
+        splitLeft.Panel2.BackColor = Color.FromArgb(37, 37, 38);
+
+        // splitLeft.Panel1 — Namespace Filter
         var lblNsHeader = MakeSectionHeader("NAMESPACE FILTER");
 
         chkAllNamespaces = new CheckBox
         {
-            Dock = DockStyle.Top,
-            Height = 26,
-            Text = "All Namespaces",
-            Checked = true,
+            Dock      = DockStyle.Top,
+            Height    = 26,
+            Text      = "All Namespaces",
+            Checked   = true,
             ForeColor = Color.FromArgb(204, 204, 204),
             BackColor = Color.FromArgb(50, 50, 53),
-            Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-            Padding = new Padding(8, 0, 0, 0)
+            Font      = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+            Padding   = new Padding(8, 0, 0, 0)
         };
         chkAllNamespaces.CheckedChanged += chkAllNamespaces_CheckedChanged;
 
         clbNamespaces = new CheckedListBox
         {
-            Dock = DockStyle.Top,
-            Height = 200,
-            BackColor = Color.FromArgb(45, 45, 48),
-            ForeColor = Color.FromArgb(204, 204, 204),
-            BorderStyle = BorderStyle.None,
+            Dock         = DockStyle.Fill,
+            BackColor    = Color.FromArgb(45, 45, 48),
+            ForeColor    = Color.FromArgb(204, 204, 204),
+            BorderStyle  = BorderStyle.None,
             CheckOnClick = true,
-            Font = new Font("Segoe UI", 8.5f),
-            ItemHeight = 22
+            Font         = new Font("Segoe UI", 8.5f),
+            ItemHeight   = 22
         };
+        clbNamespaces.ItemCheck += clbNamespaces_ItemCheck;
 
-        var divider = new Label
-        {
-            Dock = DockStyle.Top,
-            Height = 1,
-            BackColor = Color.FromArgb(60, 60, 65)
-        };
+        splitLeft.Panel1.Controls.Add(clbNamespaces);
+        splitLeft.Panel1.Controls.Add(chkAllNamespaces);
+        splitLeft.Panel1.Controls.Add(lblNsHeader);
 
+        // splitLeft.Panel2 — Error Log
         var lblErrHeader = MakeSectionHeader("ERROR LOG");
 
         lstErrors = new ListBox
         {
-            Dock = DockStyle.Fill,
-            BackColor = Color.FromArgb(45, 45, 48),
+            Dock        = DockStyle.Fill,
+            BackColor   = Color.FromArgb(45, 45, 48),
             BorderStyle = BorderStyle.None,
-            Font = new Font("Segoe UI", 8f),
-            ItemHeight = 24,
-            DrawMode = DrawMode.OwnerDrawFixed
+            Font        = new Font("Segoe UI", 8f),
+            ItemHeight  = 24,
+            DrawMode    = DrawMode.OwnerDrawFixed
         };
         lstErrors.DrawItem += lstErrors_DrawItem;
 
-        // Fill 먼저, 이후 Top들은 역순으로 추가
-        pnlLeft.Controls.Add(lstErrors);
-        pnlLeft.Controls.Add(lblErrHeader);
-        pnlLeft.Controls.Add(divider);
-        pnlLeft.Controls.Add(clbNamespaces);
-        pnlLeft.Controls.Add(chkAllNamespaces);
-        pnlLeft.Controls.Add(lblNsHeader);
+        splitLeft.Panel2.Controls.Add(lstErrors);
+        splitLeft.Panel2.Controls.Add(lblErrHeader);
 
-        // ── Right Panel ──────────────────────────────────────────────────
-        pnlRight = new Panel
+        splitOuter.Panel1.Controls.Add(splitLeft);
+
+        // ── SplitContainer 내부 (Graph | Right) ──────────────────────────
+        splitInner = new SplitContainer
         {
-            Dock = DockStyle.Right,
-            Width = 240,
-            BackColor = Color.FromArgb(37, 37, 38)
+            Dock          = DockStyle.Fill,
+            Orientation   = Orientation.Vertical,
+            SplitterWidth = 4,
+            BackColor     = Color.FromArgb(50, 50, 54)
+        };
+        splitInner.Panel1.BackColor = Color.FromArgb(30, 30, 30);
+        splitInner.Panel2.BackColor = Color.FromArgb(37, 37, 38);
+
+        // ── Graph 패널 (splitInner.Panel1) ───────────────────────────────
+        pnlGraph = new Panel
+        {
+            Dock      = DockStyle.Fill,
+            BackColor = Color.FromArgb(30, 30, 30)
         };
 
-        // CLASS INFO 카드
+        pnlLegend = new Panel
+        {
+            Size        = new Size(160, 140),
+            BackColor   = Color.FromArgb(45, 45, 48),
+            BorderStyle = BorderStyle.None,
+            Anchor      = AnchorStyles.Top | AnchorStyles.Right,
+            Visible     = false
+        };
+        pnlLegend.Paint += pnlLegend_Paint;
+        pnlGraph.Controls.Add(pnlLegend);
+        splitInner.Panel1.Controls.Add(pnlGraph);
+
+        // ── Right 패널 — splitRight (Class Info | Dependency Metrics) ────
+        splitRight = new SplitContainer
+        {
+            Dock          = DockStyle.Fill,
+            Orientation   = Orientation.Horizontal,
+            SplitterWidth = 4,
+            BackColor     = Color.FromArgb(50, 50, 54)
+        };
+        splitRight.Panel1.BackColor = Color.FromArgb(37, 37, 38);
+        splitRight.Panel2.BackColor = Color.FromArgb(37, 37, 38);
+
+        // splitRight.Panel1 — Class Info
         var lblClassInfoHeader = MakeSectionHeader("CLASS INFO");
 
         var pnlClassInfoBody = new Panel
         {
-            Dock = DockStyle.Top,
-            Height = 210,
+            Dock      = DockStyle.Fill,
             BackColor = Color.FromArgb(45, 45, 48),
-            Padding = new Padding(12, 10, 10, 8)
+            Padding   = new Padding(12, 10, 10, 8)
         };
 
         lblInfoName = new Label
         {
-            Dock = DockStyle.Top,
-            Height = 28,
+            Dock      = DockStyle.Top,
+            Height    = 28,
             ForeColor = Color.FromArgb(220, 220, 220),
-            Font = new Font("Segoe UI", 10.5f, FontStyle.Bold),
+            Font      = new Font("Segoe UI", 10.5f, FontStyle.Bold),
             BackColor = Color.Transparent,
-            Text = "—"
+            Text      = "—"
         };
 
         var (rowKind,    lblKindVal)    = MakeInfoRow("Kind");
@@ -158,7 +200,6 @@ partial class MainForm
         lblInfoMethodsVal = lblMethodsVal;
         lblInfoDepsVal    = lblDepsVal;
 
-        // Top은 역순 추가 (마지막 추가 = 최상단)
         pnlClassInfoBody.Controls.Add(rowDeps);
         pnlClassInfoBody.Controls.Add(rowMethods);
         pnlClassInfoBody.Controls.Add(rowFields);
@@ -167,21 +208,17 @@ partial class MainForm
         pnlClassInfoBody.Controls.Add(rowKind);
         pnlClassInfoBody.Controls.Add(lblInfoName);
 
-        // DEPENDENCY METRICS 카드
-        var dividerRight = new Label
-        {
-            Dock = DockStyle.Top,
-            Height = 1,
-            BackColor = Color.FromArgb(60, 60, 65)
-        };
+        splitRight.Panel1.Controls.Add(pnlClassInfoBody);
+        splitRight.Panel1.Controls.Add(lblClassInfoHeader);
 
+        // splitRight.Panel2 — Dependency Metrics
         var lblMetricsHeader = MakeSectionHeader("DEPENDENCY METRICS");
 
         var pnlMetricsBody = new Panel
         {
-            Dock = DockStyle.Fill,
+            Dock      = DockStyle.Fill,
             BackColor = Color.FromArgb(45, 45, 48),
-            Padding = new Padding(12, 10, 10, 8)
+            Padding   = new Padding(12, 10, 10, 8)
         };
 
         var (rowCa,   lblCaVal)   = MakeMetricRow("Afferent Coupling");
@@ -196,92 +233,69 @@ partial class MainForm
         pnlMetricsBody.Controls.Add(rowCe);
         pnlMetricsBody.Controls.Add(rowCa);
 
-        // Fill 먼저, 이후 Top 역순
-        pnlRight.Controls.Add(pnlMetricsBody);
-        pnlRight.Controls.Add(lblMetricsHeader);
-        pnlRight.Controls.Add(dividerRight);
-        pnlRight.Controls.Add(pnlClassInfoBody);
-        pnlRight.Controls.Add(lblClassInfoHeader);
+        splitRight.Panel2.Controls.Add(pnlMetricsBody);
+        splitRight.Panel2.Controls.Add(lblMetricsHeader);
 
-        // ── Center Graph Panel ───────────────────────────────────────────
-        pnlGraph = new Panel
-        {
-            Dock = DockStyle.Fill,
-            BackColor = Color.FromArgb(30, 30, 30)
-        };
+        splitInner.Panel2.Controls.Add(splitRight);
+        splitOuter.Panel2.Controls.Add(splitInner);
 
-        pnlLegend = new Panel
-        {
-            Size = new Size(160, 140),
-            BackColor = Color.FromArgb(45, 45, 48),
-            BorderStyle = BorderStyle.None,
-            Anchor = AnchorStyles.Top | AnchorStyles.Right,
-            Visible = false
-        };
-        pnlLegend.Paint += pnlLegend_Paint;
-        pnlGraph.Controls.Add(pnlLegend);
-
-        // ── Form Controls (순서 중요: Fill이 마지막) ─────────────────────
-        Controls.Add(pnlGraph);     // Fill — 나머지 공간 전부
-        Controls.Add(pnlRight);     // Right
-        Controls.Add(pnlLeft);      // Left
-        Controls.Add(statusStrip);  // Bottom
-        Controls.Add(toolStrip);    // Top
+        // ── Form Controls ────────────────────────────────────────────────
+        Controls.Add(splitOuter);
+        Controls.Add(statusStrip);
+        Controls.Add(toolStrip);
     }
 
     private static Label MakeSectionHeader(string text) => new Label
     {
-        Text = text,
-        Dock = DockStyle.Top,
-        Height = 28,
+        Text      = text,
+        Dock      = DockStyle.Top,
+        Height    = 28,
         BackColor = Color.FromArgb(0, 122, 204),
         ForeColor = Color.White,
-        Font = new Font("Segoe UI", 8f, FontStyle.Bold),
+        Font      = new Font("Segoe UI", 8f, FontStyle.Bold),
         TextAlign = System.Drawing.ContentAlignment.MiddleCenter
     };
 
-    /// <summary>키(회색) + 값(밝은 흰색) 두 레이블로 구성된 정보 행을 생성한다.</summary>
     private static (Panel row, Label valLabel) MakeInfoRow(string key)
     {
         var row = new Panel { Dock = DockStyle.Top, Height = 22, BackColor = Color.Transparent };
         row.Controls.Add(new Label
         {
-            Text = key + ":",
+            Text      = key + ":",
             Left = 0, Top = 3, Width = 90, Height = 18,
             ForeColor = Color.FromArgb(120, 120, 130),
-            Font = new Font("Segoe UI", 8.5f),
+            Font      = new Font("Segoe UI", 8.5f),
             BackColor = Color.Transparent
         });
         var val = new Label
         {
-            Text = "—",
+            Text      = "—",
             Left = 92, Top = 3, Width = 126, Height = 18,
             ForeColor = Color.FromArgb(200, 200, 210),
-            Font = new Font("Segoe UI", 8.5f),
+            Font      = new Font("Segoe UI", 8.5f),
             BackColor = Color.Transparent
         };
         row.Controls.Add(val);
         return (row, val);
     }
 
-    /// <summary>메트릭 행 — 키(회색) + 값(굵은 흰색).</summary>
     private static (Panel row, Label valLabel) MakeMetricRow(string key)
     {
         var row = new Panel { Dock = DockStyle.Top, Height = 26, BackColor = Color.Transparent };
         row.Controls.Add(new Label
         {
-            Text = key + ":",
+            Text      = key + ":",
             Left = 0, Top = 4, Width = 130, Height = 18,
             ForeColor = Color.FromArgb(120, 120, 130),
-            Font = new Font("Segoe UI", 8.5f),
+            Font      = new Font("Segoe UI", 8.5f),
             BackColor = Color.Transparent
         });
         var val = new Label
         {
-            Text = "—",
+            Text      = "—",
             Left = 132, Top = 4, Width = 76, Height = 18,
             ForeColor = Color.FromArgb(220, 220, 220),
-            Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+            Font      = new Font("Segoe UI", 9f, FontStyle.Bold),
             BackColor = Color.Transparent,
             TextAlign = System.Drawing.ContentAlignment.MiddleRight
         };
@@ -289,8 +303,10 @@ partial class MainForm
         return (row, val);
     }
 
-    private Panel pnlLeft;
-    private Panel pnlRight;
+    private SplitContainer splitOuter;
+    private SplitContainer splitInner;
+    private SplitContainer splitLeft;
+    private SplitContainer splitRight;
     private Panel pnlGraph;
     private Panel pnlLegend;
     private CheckBox chkAllNamespaces;
