@@ -51,8 +51,10 @@ public partial class MainForm : Form
 
             var classCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Class);
             var interfaceCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Interface);
-            var errorText = result.Errors.Count > 0 ? $" | ⚠ 에러: {result.Errors.Count}개" : string.Empty;
-            SetStatus($"분석 완료 — 클래스: {classCount}개 | 인터페이스: {interfaceCount}개 | .cs 파일: {files.Count}개{errorText}");
+            SetStatus($"분석 완료 — 클래스: {classCount}개 | 인터페이스: {interfaceCount}개 | .cs 파일: {files.Count}개");
+            lblError.Text = result.Errors.Count > 0 ? $"⚠ 에러: {result.Errors.Count}개" : string.Empty;
+
+            lblFolderPath.Text = folderPath;
         }
         finally
         {

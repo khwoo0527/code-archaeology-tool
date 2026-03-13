@@ -35,8 +35,25 @@ partial class MainForm
 
         // StatusStrip
         var statusStrip = new StatusStrip();
-        lblStatus = new ToolStripStatusLabel("준비");
+        lblStatus = new ToolStripStatusLabel("폴더를 열어 분석을 시작하세요.")
+        {
+            TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        };
+        lblError = new ToolStripStatusLabel(string.Empty)
+        {
+            ForeColor = System.Drawing.Color.DarkRed,
+            TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        };
+        var lblSpring = new ToolStripStatusLabel(string.Empty) { Spring = true };
+        lblFolderPath = new ToolStripStatusLabel(string.Empty)
+        {
+            ForeColor = System.Drawing.Color.Gray,
+            TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        };
         statusStrip.Items.Add(lblStatus);
+        statusStrip.Items.Add(lblError);
+        statusStrip.Items.Add(lblSpring);
+        statusStrip.Items.Add(lblFolderPath);
 
         Controls.Add(pnlGraph);
         Controls.Add(toolStrip);
@@ -45,4 +62,6 @@ partial class MainForm
 
     private Panel pnlGraph;
     private ToolStripStatusLabel lblStatus;
+    private ToolStripStatusLabel lblError;
+    private ToolStripStatusLabel lblFolderPath;
 }
