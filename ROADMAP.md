@@ -110,7 +110,7 @@ UI Layer (WinForms)  -->  Analysis Layer (Roslyn)  -->  Model Layer (Graph)
 
 ## [분석 엔진] Roslyn 의존성 추출
 
-### - [ ] S-03. GraphModel 데이터 모델 정의 `~20분`
+### - [x] S-03. GraphModel 데이터 모델 정의 `~20분`
 
 **구현** (`Models/` 폴더):
 ```csharp

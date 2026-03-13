@@ -12,7 +12,7 @@
 |--------|------|-----------|------|
 | S-01. 솔루션 생성 + NuGet 설치 | ✅ 완료 | 2026-03-13 | |
 | S-02. 폴더 구조 + MainForm 레이아웃 | ✅ 완료 | 2026-03-13 | |
-| S-03. GraphModel 데이터 모델 정의 | 예정 | - | |
+| S-03. GraphModel 데이터 모델 정의 | ✅ 완료 | 2026-03-13 | |
 | S-04. FolderScanner | 예정 | - | |
 | S-05. RoslynAnalyzer — class 노드 추출 | 예정 | - | |
 | S-06. RoslynAnalyzer — interface 노드 추출 | 예정 | - | |
@@ -40,8 +40,8 @@
 ---
 
 ### [S-03] GraphModel 데이터 모델 정의
-- **상태**: 예정
-- **결과**: -
+- **상태**: ✅ 완료 (2026-03-13)
+- **결과**: TypeNode(TypeKind: Class/Interface) / DependencyEdge(EdgeType: Inheritance/InterfaceImpl/FieldDependency) / AnalysisResult(Nodes+Edges+Errors) 3종 모델 정의. 빌드 오류 0건 확인.
 
 ---
 
