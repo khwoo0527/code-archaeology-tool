@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeArchaeology", "CodeArchaeology\CodeArchaeology.csproj", "{DC16E8A2-1560-4C6A-BA35-8639469D0C00}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeArchaeology.Tests", "CodeArchaeology.Tests\CodeArchaeology.Tests.csproj", "{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{DC16E8A2-1560-4C6A-BA35-8639469D0C00}.Release|x64.Build.0 = Release|Any CPU
 		{DC16E8A2-1560-4C6A-BA35-8639469D0C00}.Release|x86.ActiveCfg = Release|Any CPU
 		{DC16E8A2-1560-4C6A-BA35-8639469D0C00}.Release|x86.Build.0 = Release|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Debug|x64.Build.0 = Debug|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Debug|x86.Build.0 = Debug|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Release|x64.ActiveCfg = Release|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Release|x64.Build.0 = Release|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Release|x86.ActiveCfg = Release|Any CPU
+		{E08654DD-E5C3-4FFF-B762-EF5AE981DCA7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

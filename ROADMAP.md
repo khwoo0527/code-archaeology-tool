@@ -517,8 +517,8 @@ PRD에 명시되었거나 개발 과정에서 도출될 수 있는 향후 기능
 > Sprint 기능 구현과 병행하여 신뢰성 인프라를 즉시 구축하기로 결정.
 
 - [x] **QI-01. GitHub Actions CI 파이프라인** — `master` push/PR 시 자동 빌드 검증 (`.github/workflows/ci.yml`)
-- [ ] **QI-02. xUnit 단위 테스트 프로젝트** — `CodeArchaeology.Tests` 신설, RoslynAnalyzer 핵심 로직(클래스 추출, 엣지 추출, partial merge) 커버
-- [ ] **QI-03. CI 테스트 연동** — QI-02 완료 후 `dotnet test`를 CI 파이프라인에 통합, `continue-on-error` 제거
+- [x] **QI-02. xUnit 단위 테스트 프로젝트** — `CodeArchaeology.Tests` 신설, RoslynAnalyzer 핵심 로직 11개 테스트 케이스 전원 통과
+- [x] **QI-03. CI 테스트 연동** — `dotnet test` CI 파이프라인 통합 완료, `continue-on-error` 제거
 
 ---
 
@@ -527,7 +527,7 @@ PRD에 명시되었거나 개발 과정에서 도출될 수 있는 향후 기능
 | 항목 | 발생 예상 Phase | 해결 예정 Phase |
 |------|----------------|----------------|
 | 필드 타입 매칭 휴리스틱 (SemanticModel 미사용) | Phase 2 | Phase 4 검토 |
-| 단위 테스트 부재 | Phase 1-3 | **QI-02로 선행 처리** |
+| 단위 테스트 부재 | Phase 1-3 | ✅ QI-02 완료 (2026-03-13) |
 | 하드코딩된 색상/스타일 값 | Phase 3 | Phase 5 |
 | 대규모 프로젝트 성능 최적화 | Phase 4 | Phase 6 |
 
@@ -544,4 +544,4 @@ PRD에 명시되었거나 개발 과정에서 도출될 수 있는 향후 기능
 | 2026-03-13 | 범위 확장 | S-EX-07 추가 | 계획에 없던 Sugiyama TB 레이아웃 전환 + 범례 패널을 Extension에 추가 | 사용자 피드백: 기본 LR 레이아웃으로 클래스 다수 시 가로 팽창·위아래 공백 현상 발생 |
 | 2026-03-13 | 다크 테마 | 다크 UI 적용 | DarkToolStripRenderer + 파란 StatusBar + 노드 배경색 적용 | 사용자 요청: "2026년도에 이 UI는 너무 오래된 느낌" — 모던 개발자 도구 감성으로 전환 |
 | 2026-03-13 | 스프린트 재편 | Phase 4 → Sprint 2 재구성 | Phase 4의 노드 인터랙션 항목들을 UI 개편 중심으로 재우선순위 지정 | 사용자 피드백: 레퍼런스 UI(`UI느낌.png`) 기준으로 3분할 레이아웃이 선행되어야 나머지 인터랙션 기능이 의미 있음. UI 구조 없이 기능만 추가하는 방식은 사용성 측면에서 부적절하다고 판단 |
-| 2026-03-13 | 품질 인프라 | CI/CD + 테스트 신규 추가 | GitHub Actions CI 파이프라인 구축(QI-01), xUnit 테스트 프로젝트 계획(QI-02~03) | 중간 평가 피드백: 검증 계획 4/15점 — "CI/CD 전무, 자동화 테스트 없음" 직접 지적. 재평가 대응을 위해 Sprint 2와 병행하여 즉시 추진 결정 |
+| 2026-03-13 | 품질 인프라 | CI/CD + 테스트 완료 | GitHub Actions CI 구축(QI-01) + xUnit 11개 테스트 전원 통과(QI-02) + CI 연동(QI-03) 당일 완료 | 중간 평가 피드백: 검증 계획 4/15점 — "CI/CD 전무, 자동화 테스트 없음" 직접 지적. 재평가 대응을 위해 Sprint 2와 병행하여 즉시 추진 결정 |
