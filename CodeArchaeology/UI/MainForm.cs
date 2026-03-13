@@ -1,3 +1,5 @@
+using CodeArchaeology.Analysis;
+
 namespace CodeArchaeology.UI;
 
 public partial class MainForm : Form
@@ -92,8 +94,9 @@ public partial class MainForm : Form
         {
             var (result, files) = await Task.Run(() =>
             {
-                var csFiles = Analysis.FolderScanner.GetCsFiles(folderPath);
-                var analyzer = new Analysis.RoslynAnalyzer();
+                IFolderScanner scanner = new Analysis.FolderScanner();
+                IAnalyzer analyzer = new Analysis.RoslynAnalyzer();
+                var csFiles = scanner.GetCsFiles(folderPath);
                 return (analyzer.Analyze(csFiles), csFiles);
             });
 

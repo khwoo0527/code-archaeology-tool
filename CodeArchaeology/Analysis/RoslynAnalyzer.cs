@@ -4,8 +4,19 @@ using CodeArchaeology.Models;
 
 namespace CodeArchaeology.Analysis;
 
-public class RoslynAnalyzer
+/// <summary>
+/// Roslyn SyntaxTree 기반 C# 정적 분석기 — <see cref="IAnalyzer"/> 구현체.
+/// SemanticModel 없이 SyntaxWalker만 사용하므로 컴파일 없이 빠르게 분석된다.
+/// </summary>
+/// <remarks>
+/// 분석 3단계:
+/// 1. 모든 파일 파싱 → TypeWalker로 노드(타입) 수집
+/// 2. partial class 병합 — 동일 FullName 노드를 단일 노드로 통합
+/// 3. 알려진 타입 집합 확정 후 의존성 엣지 추출 (프로젝트 내부 타입만)
+/// </remarks>
+public class RoslynAnalyzer : IAnalyzer
 {
+    /// <inheritdoc/>
     public AnalysisResult Analyze(IReadOnlyList<string> filePaths)
     {
         var result = new AnalysisResult();

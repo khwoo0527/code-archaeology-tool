@@ -1,6 +1,10 @@
 namespace CodeArchaeology.Analysis;
 
-public static class FolderScanner
+/// <summary>
+/// C# 소스 파일 수집기 — <see cref="IFolderScanner"/> 구현체.
+/// 재귀적으로 폴더를 탐색하며 bin / obj 빌드 산출물 폴더를 자동 제외한다.
+/// </summary>
+public class FolderScanner : IFolderScanner
 {
     // 빌드 산출물 폴더 — 분석 대상에서 제외
     private static readonly HashSet<string> ExcludedFolders = new(StringComparer.OrdinalIgnoreCase)
@@ -8,7 +12,8 @@ public static class FolderScanner
         "bin", "obj"
     };
 
-    public static IReadOnlyList<string> GetCsFiles(string folderPath)
+    /// <inheritdoc/>
+    public IReadOnlyList<string> GetCsFiles(string folderPath)
     {
         if (!Directory.Exists(folderPath))
             return Array.Empty<string>();
