@@ -278,7 +278,7 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 > Core(S-01~S-12) 완료 후 남은 시간에 순서대로 진행
 
 - [x] **S-EX-01. 엣지 색상/스타일 구분** — 상속:검정실선 / 인터페이스:파랑점선 / 필드:회색실선 ⭐ UX 평가 대응 (S-10에서 선구현)
-- [ ] **S-EX-02. 필드 타입 의존성 추출** — `VisitFieldDeclaration()` 추가
+- [x] **S-EX-02. 필드 타입 의존성 추출** — `VisitFieldDeclaration()` 추가
 - [ ] **S-EX-03. 노드 라벨 네임스페이스 표시** — `Namespace.ClassName` 형식
 - [ ] **S-EX-04. partial class 병합** — 동일 FullName 노드 합산
 - [ ] **S-EX-05. 비동기 처리** — `Task.Run()`으로 UI 프리징 방지

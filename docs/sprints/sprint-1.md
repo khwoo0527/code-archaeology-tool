@@ -107,7 +107,7 @@
 | 태스크 | 상태 | 메모 |
 |--------|------|------|
 | S-EX-01. 엣지 색상/스타일 구분 | ✅ 완료 | S-10에서 구현됨 (MsaglRenderer.cs:35-47) |
-| S-EX-02. 필드 타입 의존성 추출 | 예정 | |
+| S-EX-02. 필드 타입 의존성 추출 | ✅ 완료 | |
 
 ---
 
@@ -115,6 +115,13 @@
 - **상태**: ✅ 완료 (S-10에서 선구현, 2026-03-13)
 - **결과**: S-10(MsaglRenderer — 엣지 추가) 구현 시 엣지 색상/스타일 구분이 함께 적용됨. 상속(검정실선 `Color.Black`) / 인터페이스(파랑점선 `Color.Blue` + `DashStyle.Dash`) / 필드(회색실선 `Color.Gray`) 3종 구분 렌더링. Msagl.Drawing.Color와 System.Drawing.Color 네임스페이스 충돌 → 전체 경로 명시로 해결. `MsaglRenderer.cs` 35-47번 라인에 구현됨.
 - **이슈/결정**: S-09 계획 시 "디자인은 S-EX-01에서 완성 예정"으로 기록했으나, S-10 구현 중 엣지 스타일을 함께 처리하는 것이 자연스러워 즉시 구현. S-EX-01은 별도 태스크 없이 완료 처리.
+
+---
+
+### [S-EX-02] 필드 타입 의존성 추출
+- **상태**: ✅ 완료 (2026-03-13)
+- **결과**: `VisitFieldDeclaration()` + `ExtractTypeName()` 추가로 필드 선언에서 타입 의존성 추출 구현. `_currentClassName` 컨텍스트 추적으로 어느 클래스의 필드인지 파악. 5종 타입 패턴 처리: SimpleNameSyntax(일반), GenericNameSyntax(제네릭), QualifiedNameSyntax(정규화명), NullableTypeSyntax(nullable), ArrayTypeSyntax(배열). `PredefinedTypeSyntax`(int, string 등) 스킵. `GetEdges()`에 필드 엣지 생성 로직 추가 — 내부 타입 필터, 자기 자신 제외, HashSet 중복 제거. `Sample.cs`에 `Dog._friend: Cat` 케이스 추가. Dog→Cat 회색실선 엣지 UI 확인.
+- **이슈/결정**: `GenericNameSyntax`가 `SimpleNameSyntax`의 서브타입이라 switch expression 순서 오류 발생 → `GenericNameSyntax`를 먼저 처리하는 순서로 수정.
 | S-EX-03. 노드 라벨 네임스페이스 표시 | 예정 | |
 | S-EX-04. partial class 병합 | 예정 | |
 | S-EX-05. 비동기 처리 | 예정 | |

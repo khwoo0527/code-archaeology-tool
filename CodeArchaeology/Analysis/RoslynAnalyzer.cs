@@ -57,11 +57,15 @@ internal class TypeWalker : CSharpSyntaxWalker
 {
     private readonly string _filePath;
     private string _currentNamespace = string.Empty;
+    private string? _currentClassName;
 
     public List<TypeNode> Nodes { get; } = new();
 
     // 엣지 추출을 위해 클래스 선언 노드를 보관
     private readonly List<ClassDeclarationSyntax> _classDeclarations = new();
+
+    // 필드 의존성: (클래스명, 필드타입명) 쌍
+    private readonly List<(string ClassName, string FieldTypeName)> _fieldDependencies = new();
 
     public TypeWalker(string filePath)
     {
@@ -95,11 +99,53 @@ internal class TypeWalker : CSharpSyntaxWalker
         });
 
         _classDeclarations.Add(node);
+        _currentClassName = node.Identifier.Text;
         base.VisitClassDeclaration(node);
+        _currentClassName = null;
+    }
+
+    public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
+    {
+        if (_currentClassName == null)
+        {
+            base.VisitFieldDeclaration(node);
+            return;
+        }
+
+        var typeName = ExtractTypeName(node.Declaration.Type);
+        if (typeName != null)
+        {
+            _fieldDependencies.Add((_currentClassName, typeName));
+        }
+
+        base.VisitFieldDeclaration(node);
+    }
+
+    private static string? ExtractTypeName(TypeSyntax typeSyntax)
+    {
+        return typeSyntax switch
+        {
+            // int, string 등 빌트인 타입은 스킵
+            PredefinedTypeSyntax => null,
+            // List<OrderService> → "OrderService" (GenericNameSyntax는 SimpleNameSyntax 서브타입이라 먼저 처리)
+            GenericNameSyntax generic => generic.TypeArgumentList.Arguments
+                .Select(ExtractTypeName)
+                .FirstOrDefault(n => n != null),
+            // OrderService → "OrderService"
+            SimpleNameSyntax simple => simple.Identifier.Text,
+            // Models.OrderService → "OrderService"
+            QualifiedNameSyntax qualified => qualified.Right.Identifier.Text,
+            // OrderService? → "OrderService"
+            NullableTypeSyntax nullable => ExtractTypeName(nullable.ElementType),
+            // OrderService[] → "OrderService"
+            ArrayTypeSyntax array => ExtractTypeName(array.ElementType),
+            _ => null
+        };
     }
 
     public IEnumerable<DependencyEdge> GetEdges(HashSet<string> knownTypeNames)
     {
+        // 상속/인터페이스 엣지
         foreach (var classNode in _classDeclarations)
         {
             if (classNode.BaseList == null) continue;
@@ -129,6 +175,24 @@ internal class TypeWalker : CSharpSyntaxWalker
                     Type = edgeType
                 };
             }
+        }
+
+        // 필드 의존성 엣지 (내부 타입끼리만, 자기 자신 제외, 중복 제거)
+        var seen = new HashSet<(string, string)>();
+        foreach (var (className, fieldTypeName) in _fieldDependencies)
+        {
+            if (!knownTypeNames.Contains(fieldTypeName)) continue;
+            if (className == fieldTypeName) continue;
+
+            var pair = (className, fieldTypeName);
+            if (!seen.Add(pair)) continue;
+
+            yield return new DependencyEdge
+            {
+                Source = className,
+                Target = fieldTypeName,
+                Type = EdgeType.FieldDependency
+            };
         }
     }
 

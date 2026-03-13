@@ -10,6 +10,7 @@ public class Animal { }
 
 public class Dog : Animal, IAnimal
 {
+    private Cat _friend;         // FieldDependency: Dog → Cat
     public void Speak() { }
 }
 
