@@ -80,49 +80,52 @@ public partial class MainForm : Form
     private void pnlLegend_Paint(object? sender, PaintEventArgs e)
     {
         var g = e.Graphics;
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
         using var titleFont = new Font("Segoe UI", 8f, FontStyle.Bold);
         using var labelFont = new Font("Segoe UI", 8f);
+        var textBrush = new SolidBrush(Color.FromArgb(204, 204, 204));
 
         int xBox = 10, xText = 50;
         int y = 8;
 
-        g.DrawString("범  례", titleFont, Brushes.Black, xBox, y);
+        g.DrawString("범  례", titleFont, textBrush, xBox, y);
         y += 20;
 
         // 클래스: 연파랑 사각형
         g.FillRectangle(new SolidBrush(Color.FromArgb(210, 230, 255)), xBox, y, 30, 14);
         g.DrawRectangle(new Pen(Color.FromArgb(30, 80, 160), 1.5f), xBox, y, 30, 14);
-        g.DrawString("클래스", labelFont, Brushes.Black, xText, y);
+        g.DrawString("클래스", labelFont, textBrush, xText, y);
         y += 20;
 
         // 인터페이스: 연보라 타원
         g.FillEllipse(new SolidBrush(Color.FromArgb(230, 210, 255)), xBox, y, 30, 14);
         g.DrawEllipse(new Pen(Color.FromArgb(120, 60, 180), 1.5f), xBox, y, 30, 14);
-        g.DrawString("인터페이스", labelFont, Brushes.Black, xText, y);
+        g.DrawString("인터페이스", labelFont, textBrush, xText, y);
         y += 22;
 
-        // 상속: 검정 실선
-        using (var pen = new Pen(Color.Black, 2f))
+        // 상속: 밝은 회색 실선 (다크 배경 위)
+        using (var pen = new Pen(Color.FromArgb(180, 180, 180), 2f))
         {
             g.DrawLine(pen, xBox, y + 6, xBox + 30, y + 6);
         }
-        g.DrawString("상속", labelFont, Brushes.Black, xText, y);
+        g.DrawString("상속", labelFont, textBrush, xText, y);
         y += 20;
 
         // 인터페이스 구현: 파랑 점선
-        using (var pen = new Pen(Color.Blue, 2f) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash })
+        using (var pen = new Pen(Color.FromArgb(100, 150, 255), 2f) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash })
         {
             g.DrawLine(pen, xBox, y + 6, xBox + 30, y + 6);
         }
-        g.DrawString("인터페이스 구현", labelFont, Brushes.Black, xText, y);
+        g.DrawString("인터페이스 구현", labelFont, textBrush, xText, y);
         y += 20;
 
         // 필드 의존성: 회색 실선
-        using (var pen = new Pen(Color.Gray, 2f))
+        using (var pen = new Pen(Color.FromArgb(130, 130, 130), 2f))
         {
             g.DrawLine(pen, xBox, y + 6, xBox + 30, y + 6);
         }
-        g.DrawString("필드 의존성", labelFont, Brushes.Black, xText, y);
+        g.DrawString("필드 의존성", labelFont, textBrush, xText, y);
     }
 
     public void SetStatus(string message)
