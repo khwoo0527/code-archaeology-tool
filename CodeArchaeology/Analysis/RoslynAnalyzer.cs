@@ -73,4 +73,18 @@ internal class TypeWalker : CSharpSyntaxWalker
 
         base.VisitClassDeclaration(node);
     }
+
+    public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
+    {
+        Nodes.Add(new TypeNode
+        {
+            Name = node.Identifier.Text,
+            Namespace = _currentNamespace,
+            FilePath = _filePath,
+            Kind = TypeKind.Interface,
+            MethodCount = node.Members.OfType<MethodDeclarationSyntax>().Count()
+        });
+
+        base.VisitInterfaceDeclaration(node);
+    }
 }

@@ -35,7 +35,8 @@ public partial class MainForm : Form
         var result = analyzer.Analyze(files);
 
         var classCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Class);
-        SetStatus($"발견된 클래스: {classCount}개 | .cs 파일: {files.Count}개 | 에러: {result.Errors.Count}개");
+        var interfaceCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Interface);
+        SetStatus($"클래스: {classCount}개 | 인터페이스: {interfaceCount}개 | .cs 파일: {files.Count}개 | 에러: {result.Errors.Count}개");
     }
 
     public void SetStatus(string message)

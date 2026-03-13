@@ -164,7 +164,7 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 
 ---
 
-### - [ ] S-06. RoslynAnalyzer — interface 노드 추출 `~15분`
+### - [x] S-06. RoslynAnalyzer — interface 노드 추출 `~15분`
 
 **구현:**
 - `VisitInterfaceDeclaration()` 추가
