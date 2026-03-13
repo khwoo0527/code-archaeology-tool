@@ -275,10 +275,22 @@ switch (edge.Type)
 
 ```
 StatusBar 출력:
-분석 완료 — 클래스: 5개 | 인터페이스: 1개 | .cs 파일: 3개
+분석 완료 — 클래스: 6개 | 인터페이스: 1개 | .cs 파일: 3개
 
-그래프 노드: Animal(박스), Cat(박스), Dog(박스), IAnimal(타원), Point(다이아몬드), Direction(헥사곤)
-그래프 엣지: Dog→Animal(회색실선), Dog→IAnimal(파랑점선), Cat→Animal(회색실선), Dog→Cat(회색실선)
+그래프 노드 (10개):
+  클래스(박스): Animal, Dog, Cat, NodeA, NodeB, NodeC
+  인터페이스(타원): IAnimal
+  struct(다이아몬드): Point
+  record(라운드박스): PersonRecord
+  enum(헥사곤): Direction
+
+그래프 엣지:
+  Dog→Animal (상속, 회색실선)
+  Dog→IAnimal (인터페이스 구현, 파랑점선)
+  Cat→Animal (상속, 회색실선)
+  Dog→Cat (필드 의존성, 회색실선)
+  Cat→Dog (필드 의존성, 회색실선) ← 순환 의존성 → 빨간 강조
+  NodeA→NodeB→NodeC→NodeA (3노드 순환) ← 빨간 강조
 ```
 
 ### 단위 테스트 결과 (`dotnet test`)
