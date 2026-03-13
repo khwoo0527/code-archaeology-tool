@@ -7,43 +7,59 @@ namespace CodeArchaeology.Rendering;
 
 public class MsaglRenderer
 {
+    // 다크 테마 기준 색상
+    private static readonly Microsoft.Msagl.Drawing.Color DarkBg      = new(30, 30, 30);
+    private static readonly Microsoft.Msagl.Drawing.Color ClassFill    = new(45, 80, 130);   // 진한 파랑
+    private static readonly Microsoft.Msagl.Drawing.Color ClassBorder  = new(100, 160, 240);  // 밝은 파랑 테두리
+    private static readonly Microsoft.Msagl.Drawing.Color IfaceFill    = new(80, 45, 120);   // 진한 보라
+    private static readonly Microsoft.Msagl.Drawing.Color IfaceBorder  = new(180, 120, 255); // 밝은 보라 테두리
+    private static readonly Microsoft.Msagl.Drawing.Color NodeText     = new(220, 220, 220); // 밝은 글자
+    private static readonly Microsoft.Msagl.Drawing.Color EdgeInherit  = new(200, 200, 200); // 밝은 회색 (다크bg 위 가시성)
+    private static readonly Microsoft.Msagl.Drawing.Color EdgeIface    = new(100, 160, 255); // 밝은 파랑 점선
+    private static readonly Microsoft.Msagl.Drawing.Color EdgeField    = new(120, 120, 140); // 중간 회색
+
     public GViewer BuildViewer(AnalysisResult result)
     {
         var graph = new Graph("dependency")
         {
-            // 위→아래(TB) 계층형 레이아웃: 상속 계층이 자연스럽게 위에서 아래로 흐름
             LayoutAlgorithmSettings = new SugiyamaLayoutSettings
             {
-                // 90도 회전 행렬로 LR→TB 전환: (cos90, -sin90, 0, sin90, cos90, 0) = (0, -1, 0, 1, 0, 0)
+                // 90도 회전 행렬로 LR→TB 전환
                 Transformation = new Microsoft.Msagl.Core.Geometry.Curves.PlaneTransformation(0, -1, 0, 1, 0, 0),
                 NodeSeparation = 20,
                 LayerSeparation = 40
             }
         };
 
-        // 노드 이름 → FullName 역방향 조회를 위한 맵
+        // 그래프 배경 다크 처리
+        graph.Attr.BackgroundColor = DarkBg;
+
         var nameToFullName = result.Nodes
             .GroupBy(n => n.Name)
             .ToDictionary(g => g.Key, g => g.First().FullName);
 
         foreach (var node in result.Nodes)
         {
-            var drawingNode = graph.AddNode(node.FullName);
-            drawingNode.LabelText = node.FullName;
+            var dn = graph.AddNode(node.FullName);
+            dn.LabelText = node.FullName;
+            dn.Label.FontColor = NodeText;
+            dn.Label.FontSize = 10;
 
             if (node.Kind == TypeKind.Interface)
             {
-                // 인터페이스: 타원 + 연보라 배경 + 보라 테두리
-                drawingNode.Attr.Shape = Shape.Ellipse;
-                drawingNode.Attr.FillColor = new Microsoft.Msagl.Drawing.Color(230, 210, 255);
-                drawingNode.Attr.Color = new Microsoft.Msagl.Drawing.Color(120, 60, 180);
+                dn.Attr.Shape = Shape.Ellipse;
+                dn.Attr.FillColor = IfaceFill;
+                dn.Attr.Color = IfaceBorder;
+                dn.Attr.LineWidth = 1.5;
             }
             else
             {
-                // 클래스: 사각형 + 연파랑 배경 + 네이비 테두리
-                drawingNode.Attr.Shape = Shape.Box;
-                drawingNode.Attr.FillColor = new Microsoft.Msagl.Drawing.Color(210, 230, 255);
-                drawingNode.Attr.Color = new Microsoft.Msagl.Drawing.Color(30, 80, 160);
+                dn.Attr.Shape = Shape.Box;
+                dn.Attr.FillColor = ClassFill;
+                dn.Attr.Color = ClassBorder;
+                dn.Attr.LineWidth = 1.5;
+                dn.Attr.XRadius = 3;
+                dn.Attr.YRadius = 3;
             }
         }
 
@@ -52,19 +68,22 @@ public class MsaglRenderer
             if (!nameToFullName.TryGetValue(edge.Source, out var sourceId)) continue;
             if (!nameToFullName.TryGetValue(edge.Target, out var targetId)) continue;
 
-            var drawingEdge = graph.AddEdge(sourceId, targetId);
+            var de = graph.AddEdge(sourceId, targetId);
 
             switch (edge.Type)
             {
                 case EdgeType.Inheritance:
-                    drawingEdge.Attr.Color = Microsoft.Msagl.Drawing.Color.Black;
+                    de.Attr.Color = EdgeInherit;
+                    de.Attr.LineWidth = 1.5;
                     break;
                 case EdgeType.InterfaceImpl:
-                    drawingEdge.Attr.Color = Microsoft.Msagl.Drawing.Color.Blue;
-                    drawingEdge.Attr.AddStyle(Style.Dashed);
+                    de.Attr.Color = EdgeIface;
+                    de.Attr.AddStyle(Style.Dashed);
+                    de.Attr.LineWidth = 1.5;
                     break;
                 case EdgeType.FieldDependency:
-                    drawingEdge.Attr.Color = Microsoft.Msagl.Drawing.Color.Gray;
+                    de.Attr.Color = EdgeField;
+                    de.Attr.LineWidth = 1;
                     break;
             }
         }
@@ -72,6 +91,8 @@ public class MsaglRenderer
         var gViewer = new GViewer
         {
             Dock = System.Windows.Forms.DockStyle.Fill,
+            BackColor = System.Drawing.Color.FromArgb(30, 30, 30),
+            OutsideAreaBrush = System.Drawing.Brushes.Transparent,
             Graph = graph
         };
 

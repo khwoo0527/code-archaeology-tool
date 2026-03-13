@@ -11,4 +11,6 @@ public class TypeNode
     public TypeKind Kind { get; set; }
     public int FieldCount { get; set; }
     public int MethodCount { get; set; }
+    public List<string> FieldNames { get; set; } = new();
+    public List<string> MethodNames { get; set; } = new();
 }

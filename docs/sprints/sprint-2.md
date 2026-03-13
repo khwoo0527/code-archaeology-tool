@@ -40,14 +40,24 @@ Phase 4에서 이월된 항목 매핑:
 |--------|------|-----------|------|
 | S2-01. UI 3분할 레이아웃 | ✅ 완료 | 2026-03-13 | 좌(190px) + 중앙(Fill) + 우(230px), 다크 테마 일관 적용 |
 | S2-02. 좌측 패널 — Namespace Filter | ✅ 완료 | 2026-03-13 | 체크 해제 시 즉시 그래프 재구성 확인 |
-| S2-03. 좌측 패널 — Error Log | 예정 | - | |
-| S2-04. 우측 패널 — Class Info (노드 클릭 연동) | 예정 | - | |
+| S2-03. 좌측 패널 — Error Log | ✅ 완료 | 2026-03-13 | 오너드로우 + 빨간 ● 인디케이터 + All Namespaces 마스터 토글 |
+| S2-04. 우측 패널 — Class Info (노드 클릭 연동) | ✅ 완료 | 2026-03-13 | 카드 UI + TreeView 탈피 + Dependency Metrics 분리 섹션 |
 | S2-05. 툴바 Search | 예정 | - | |
 | S2-06. 노드 호버 툴팁 | 예정 | - | |
 
 ---
 
 ## 진행 로그
+
+### S2-04. 우측 패널 — Class Info + Dependency Metrics (2026-03-13)
+- **결과**: 노드 클릭 시 CLASS INFO / DEPENDENCY METRICS 두 섹션 카드로 분리 표시. 클래스명(굵게) + Kind/Namespace/File/Fields/Methods/Dependencies 행별 표시. Ca(Afferent) / Ce(Efferent) / Instability(F2) 수치 우측 정렬로 표시.
+- **구현**: TreeView 방식 → 키:값 행 기반 카드 UI로 전면 재설계. `MakeInfoRow()` / `MakeMetricRow()` 헬퍼로 행 생성. `TypeNode`에 `FieldNames` / `MethodNames` 리스트 추가 — Roslyn `VisitClassDeclaration`에서 실제 이름 수집. Dependency Metrics는 기존 엣지 데이터에서 직접 계산 (별도 분석 불필요).
+- **이슈/결정**: 레퍼런스 UI(`UI느낌.png`) 검토 후 TreeView 방식이 시각적으로 맞지 않아 카드 스타일로 재작성. Ca/Ce 계산은 엣지 집계로 충분 — SemanticModel 불필요.
+
+### S2-03. 좌측 패널 — Error Log + Namespace 개선 (2026-03-13)
+- **결과**: Error Log에 오너드로우(OwnerDrawFixed) 적용 — 빨간 ● 인디케이터 + 줄무늬 배경. "All Namespaces" 마스터 체크박스 추가 — 전체 토글. 그래프 영역 다크 테마 전환 — 노드/엣지 색상 다크 배경 기준으로 재조정.
+- **구현**: `lstErrors_DrawItem` 오너드로우 핸들러. `chkAllNamespaces_CheckedChanged` — ItemCheck 이벤트 비활성화 후 일괄 SetItemChecked 처리. `MsaglRenderer` 다크 팔레트 — 클래스(진파랑/밝은파랑테두리), 인터페이스(진보라/밝은보라테두리), 엣지(밝은회색/밝은파랑점선/중간회색).
+- **이슈/결정**: 그래프 다크화 시 기존 노드 색상(연파랑/연보라) 가시성 저하 → 다크 배경에 어울리는 진한 Fill + 밝은 Border 조합으로 전면 교체.
 
 ### S2-02. 좌측 패널 — Namespace Filter (2026-03-13)
 - **결과**: 분석 완료 후 발견된 네임스페이스가 체크박스 목록으로 표시. 체크 해제 시 해당 네임스페이스 노드가 그래프에서 즉시 제거됨.

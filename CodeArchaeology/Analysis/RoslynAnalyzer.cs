@@ -53,7 +53,9 @@ public class RoslynAnalyzer
                 FilePath = g.First().FilePath,
                 Kind = g.First().Kind,
                 FieldCount = g.Sum(n => n.FieldCount),
-                MethodCount = g.Sum(n => n.MethodCount)
+                MethodCount = g.Sum(n => n.MethodCount),
+                FieldNames = g.SelectMany(n => n.FieldNames).ToList(),
+                MethodNames = g.SelectMany(n => n.MethodNames).ToList()
             })
             .ToList();
         result.Nodes.Clear();
@@ -112,7 +114,13 @@ internal class TypeWalker : CSharpSyntaxWalker
             FilePath = _filePath,
             Kind = TypeKind.Class,
             FieldCount = node.Members.OfType<FieldDeclarationSyntax>().Count(),
-            MethodCount = node.Members.OfType<MethodDeclarationSyntax>().Count()
+            MethodCount = node.Members.OfType<MethodDeclarationSyntax>().Count(),
+            FieldNames = node.Members.OfType<FieldDeclarationSyntax>()
+                .SelectMany(f => f.Declaration.Variables.Select(v => v.Identifier.Text))
+                .ToList(),
+            MethodNames = node.Members.OfType<MethodDeclarationSyntax>()
+                .Select(m => m.Identifier.Text)
+                .ToList()
         });
 
         _classDeclarations.Add(node);
