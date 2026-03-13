@@ -18,7 +18,7 @@ public partial class MainForm : Form
         if (dialog.ShowDialog() == DialogResult.OK)
         {
             _lastFolderPath = dialog.SelectedPath;
-            RunAnalysis(_lastFolderPath);
+            _ = RunAnalysisAsync(_lastFolderPath);
         }
     }
 
@@ -29,20 +29,25 @@ public partial class MainForm : Form
             SetStatus("먼저 폴더를 선택해 주세요.");
             return;
         }
-        RunAnalysis(_lastFolderPath);
+        _ = RunAnalysisAsync(_lastFolderPath);
     }
 
-    private void RunAnalysis(string folderPath)
+    private async Task RunAnalysisAsync(string folderPath)
     {
         SetStatus($"분석 중... ({Path.GetFileName(folderPath)})");
         Cursor = Cursors.WaitCursor;
 
         try
         {
-            var files = Analysis.FolderScanner.GetCsFiles(folderPath);
-            var analyzer = new Analysis.RoslynAnalyzer();
-            var result = analyzer.Analyze(files);
+            // CPU 바운드 분석 작업을 백그라운드 스레드에서 실행 — UI 프리징 방지
+            var (result, files) = await Task.Run(() =>
+            {
+                var csFiles = Analysis.FolderScanner.GetCsFiles(folderPath);
+                var analyzer = new Analysis.RoslynAnalyzer();
+                return (analyzer.Analyze(csFiles), csFiles);
+            });
 
+            // GViewer 생성 및 UI 반영은 반드시 UI 스레드에서
             var renderer = new Rendering.MsaglRenderer();
             var gViewer = renderer.BuildViewer(result);
 
@@ -61,6 +66,10 @@ public partial class MainForm : Form
             lblError.Text = result.Errors.Count > 0 ? $"⚠ 에러: {result.Errors.Count}개" : string.Empty;
 
             lblFolderPath.Text = folderPath;
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"분석 실패: {ex.Message}");
         }
         finally
         {

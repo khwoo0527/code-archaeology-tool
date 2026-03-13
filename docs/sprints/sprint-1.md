@@ -111,7 +111,7 @@
 | S-EX-07. 그래프 레이아웃 튜닝 + 범례 패널 | ✅ 완료 | 사용자 피드백 반영 — TB 레이아웃, 우상단 범례 오버레이 |
 | S-EX-03. 노드 라벨 네임스페이스 표시 | ✅ 완료 | |
 | S-EX-04. partial class 병합 | ✅ 완료 | |
-| S-EX-05. 비동기 처리 | 예정 | |
+| S-EX-05. 비동기 처리 | ✅ 완료 | |
 
 ---
 
@@ -148,6 +148,13 @@
 - **상태**: ✅ 완료 (2026-03-13)
 - **결과**: `partial class`가 여러 파일에 걸쳐 선언된 경우 파일별로 독립 노드가 생성되어 그래프에 동일 클래스가 중복 표시되던 문제를 해결. `Analyze()` 1단계(타입 수집) 완료 직후 `FullName` 기준 `GroupBy`로 동일 타입을 병합하고 `FieldCount`·`MethodCount`는 파일별 선언 합산으로 처리. 엣지 추출(기존 2단계)은 병합 후의 통합 노드 목록을 기준으로 수행하도록 단계 순서 조정. 검증용으로 `SamplePartial.cs`에 `partial class Dog { Fetch() }` 추가 — Sample.cs의 Dog(Speak)와 병합되어 단일 노드로 표시됨을 UI에서 확인.
 - **이슈/결정**: 병합 후 `FilePath`는 첫 번째 발견 파일 경로를 대표값으로 채택. 향후 툴팁 기능(P4-01) 구현 시 모든 partial 파일 경로 목록을 별도 보관하는 방향으로 확장 검토.
+
+---
+
+### [S-EX-05] 비동기 처리
+- **상태**: ✅ 완료 (2026-03-13)
+- **결과**: `RunAnalysis()` → `RunAnalysisAsync()` 전환. `FolderScanner` + `RoslynAnalyzer` 등 CPU 바운드 분석 작업 전체를 `Task.Run()`으로 백그라운드 스레드에 위임하여 대규모 프로젝트 분석 중 UI 스레드 블로킹 및 창 프리징 현상을 원천 차단. GViewer 생성 및 Controls 조작 등 UI 반영 로직은 `await` 복귀 후 UI 스레드에서 수행되어 스레드 안전성 보장. 이벤트 핸들러(`btnOpenFolder_Click`, `btnRefresh_Click`)는 `async void` 패턴 대신 `_ = RunAnalysisAsync()` 형태로 호출하여 fire-and-forget 의도를 명시적으로 표현. 예외 처리도 `catch`로 포괄하여 백그라운드 예외가 조용히 묻히지 않도록 처리.
+- **이슈/결정**: `async void` 이벤트 핸들러는 예외가 전파되지 않는 위험이 있어 `Task` 반환 메서드를 별도로 분리하고 호출부에서 명시적 무시(`_`) 처리.
 
 ---
 
