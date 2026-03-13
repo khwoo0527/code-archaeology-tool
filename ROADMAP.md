@@ -44,231 +44,217 @@ UI Layer (WinForms)  -->  Analysis Layer (Roslyn)  -->  Model Layer (Graph)
 
 ---
 
-## Phase 1: 프로젝트 셋업 및 기반 구축 (Sprint 1 - Week 1)
+## Sprint 1 — 해커톤 타임박스 계획 (6시간)
+
+> **전략**: Core(필수) → Extension(여유 시) 순서로 진행.
+> 각 Phase의 Core를 완료한 뒤 시간이 남으면 Extension으로 이동.
+> Extension은 빠진 것이 아니라 뒤에서 계속 이어나갈 수 있는 다음 목표.
+
+### 타임라인 개요
+
+| 시간 | Phase | 내용 |
+|------|-------|------|
+| 0:00 – 1:00 | Phase 1 | 프로젝트 셋업 + MainForm 레이아웃 |
+| 1:00 – 3:00 | Phase 2 | 분석 엔진 (FolderScanner + RoslynAnalyzer + GraphModel) |
+| 3:00 – 5:00 | Phase 3 | 그래프 렌더링 + 파이프라인 연결 + StatusBar |
+| 5:00 – 6:00 | Buffer | 삽질 대비 여유 / Extension 진행 |
+
+---
+
+## Phase 1: 프로젝트 셋업 (0:00 – 1:00)
 
 ### 목표
-프로젝트 솔루션 구조를 생성하고, NuGet 패키지를 설정하며, 빈 WinForms 윈도우가 실행되는 상태를 만든다.
+빌드 가능한 WinForms 프로젝트를 만들고, NuGet 패키지를 설치하며, MainForm 레이아웃을 구성한다.
 
-### 작업 목록
+### Core (반드시 완료)
 
 - [ ] **P1-01. 솔루션 및 프로젝트 생성**
   - Visual Studio 2022에서 WinForms App (.NET Framework 4.8) 프로젝트 생성
   - 솔루션명: `CodeArchaeology`, 프로젝트명: `CodeArchaeology`
-  - `.gitignore` 확인 (bin/, obj/, .vs/ 등 제외)
+  - `.gitignore` 확인 (bin/, obj/, .vs/ 제외)
 
 - [ ] **P1-02. NuGet 패키지 설치**
-  - `Microsoft.CodeAnalysis.CSharp` (최신 안정 버전) 설치
+  - `Microsoft.CodeAnalysis.CSharp` 설치
   - `Microsoft.Msagl` 설치
   - `Microsoft.Msagl.GraphViewerGdi` 설치
-  - packages.config 또는 PackageReference에 버전 고정
 
 - [ ] **P1-03. 폴더 구조 생성**
-  - `/Models` - GraphModel, Node, Edge 등 데이터 모델
-  - `/Analysis` - FolderScanner, RoslynAnalyzer
-  - `/Rendering` - MsaglRenderer
-  - `/UI` - MainForm, 커스텀 컨트롤
+  - `/Models` — TypeNode, DependencyEdge, AnalysisResult
+  - `/Analysis` — FolderScanner, RoslynAnalyzer
+  - `/Rendering` — MsaglRenderer
 
-- [ ] **P1-04. MainForm 기본 레이아웃 구성**
-  - Toolbar 영역: `ToolStrip` (폴더 열기 버튼, 새로고침 버튼, 검색 TextBox)
-  - Graph Canvas 영역: `Panel` (Dock: Fill) - Msagl GViewer를 배치할 영역
-  - StatusBar 영역: `StatusStrip` (분석 상태, 에러 카운트 표시)
-  - 1920x1080 기준 레이아웃 최적화
+- [ ] **P1-04. MainForm 기본 레이아웃**
+  - Toolbar: `ToolStrip` (폴더 열기 버튼, 새로고침 버튼)
+  - Graph Canvas: `Panel` (Dock: Fill)
+  - StatusBar: `StatusStrip` (분석 상태 레이블)
 
-### 완료 기준 (Definition of Done)
-- 솔루션이 빌드 에러 없이 컴파일된다
-- NuGet 패키지 3종이 모두 설치되어 참조가 정상 동작한다
-- MainForm 실행 시 Toolbar / Graph Canvas / StatusBar 3영역이 표시된다
-- 폴더 구조가 레이어 분리 원칙에 맞게 생성되어 있다
+### Extension (시간 남으면)
 
-### 검증 시나리오
-```
-1. Visual Studio에서 솔루션 빌드 (Build > Build Solution) - 에러 0건 확인
-2. F5로 실행 - MainForm 창이 정상 표시되는지 확인
-3. Toolbar에 폴더 열기/새로고침/검색 컨트롤이 보이는지 확인
-4. StatusBar가 화면 하단에 표시되는지 확인
-5. NuGet 패키지 관리자에서 3개 패키지 설치 상태 확인
-```
+- [ ] **P1-EX-01. Toolbar에 검색 TextBox 추가** (Sprint 2 검색 기능 준비)
+- [ ] **P1-EX-02. 1920x1080 기준 레이아웃 세부 조정**
+
+### 완료 기준
+- 빌드 에러 없이 컴파일되고 F5로 MainForm 창이 뜬다
+- NuGet 3종 설치 완료
 
 ### 기술 고려사항
-- .NET Framework 4.8은 C# 7.3까지 지원 (async/await 사용 가능, 패턴 매칭 제한적)
-- Microsoft.Msagl NuGet 버전과 GraphViewerGdi 버전 호환성 확인 필요
-- GViewer 컨트롤은 런타임에 Panel에 동적으로 추가하는 방식 권장
+- .NET Framework 4.8 → C# 7.3 지원 (async/await 가능)
+- Msagl NuGet 버전 호환성: `Microsoft.Msagl`과 `Microsoft.Msagl.GraphViewerGdi` 버전 일치 확인
+- GViewer는 런타임에 Panel에 동적으로 추가하는 방식 권장
 
 ---
 
-## Phase 2: 핵심 분석 엔진 구현 (Sprint 1 - Week 1-2)
+## Phase 2: 분석 엔진 (1:00 – 3:00)
 
 ### 목표
-폴더 내 .cs 파일을 스캔하고, Roslyn으로 class/interface의 상속, 인터페이스 구현, 필드 타입 의존성 3종을 추출하여 GraphModel로 변환한다.
+.cs 파일을 수집하고 Roslyn으로 class/interface 노드와 의존성 엣지를 추출해 GraphModel에 담는다.
 
-### 작업 목록
+### Core (반드시 완료)
 
-- [ ] **P2-01. GraphModel 데이터 모델 정의**
-  - `TypeNode` 클래스: Name, Namespace, FullName, TypeKind(Class/Interface), FilePath, FieldCount, MethodCount
-  - `DependencyEdge` 클래스: Source, Target, EdgeType(Inheritance/InterfaceImpl/FieldDependency)
-  - `AnalysisResult` 클래스: Nodes 컬렉션, Edges 컬렉션, Errors 리스트
+- [ ] **P2-01. GraphModel 데이터 모델**
+  - `TypeNode`: Name, Namespace, FullName, TypeKind(Class/Interface), FilePath, FieldCount, MethodCount
+  - `DependencyEdge`: Source, Target, EdgeType(Inheritance / InterfaceImpl / FieldDependency)
+  - `AnalysisResult`: Nodes, Edges, Errors 컬렉션
 
-- [ ] **P2-02. FolderScanner 구현**
-  - 입력: 폴더 경로
-  - 재귀적으로 `.cs` 파일 수집 (`Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories)`)
-  - 출력: .cs 파일 경로 리스트
+- [ ] **P2-02. FolderScanner**
+  - `Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories)`로 재귀 수집
 
-- [ ] **P2-03. RoslynAnalyzer 핵심 구현**
-  - `CSharpSyntaxTree.ParseText()`로 각 .cs 파일 파싱
-  - `CSharpSyntaxWalker` 상속 클래스 구현:
-    - `VisitClassDeclaration()`: class 이름, 네임스페이스, 상속 정보, 인터페이스 구현 추출
-    - `VisitInterfaceDeclaration()`: interface 이름, 네임스페이스, 상속 정보 추출
-    - `VisitFieldDeclaration()`: 필드 타입 추출
-  - partial class 병합 처리: 동일 FullName의 클래스는 하나로 합산
-  - 외부 타입 필터링: 분석된 타입 목록에 없는 타입은 엣지에서 제외
+- [ ] **P2-03a. RoslynAnalyzer — class 노드 추출** _(~30분, 검증: 콘솔/디버거로 클래스 이름 목록 확인)_
+  - `CSharpSyntaxTree.ParseText()`로 파싱
+  - `VisitClassDeclaration()`: 클래스명, 네임스페이스 추출 → TypeNode 생성
 
-- [ ] **P2-04. 에러 핸들링**
-  - 파싱 에러가 있는 파일은 에러를 기록하고 건너뛴다 (전체 분석 중단 방지)
-  - 에러 정보 수집: 파일 경로, 에러 메시지
-  - AnalysisResult.Errors에 에러 목록 저장
+- [ ] **P2-03b. RoslynAnalyzer — interface 노드 추출** _(~15분, 검증: 인터페이스 이름 목록 확인)_
+  - `VisitInterfaceDeclaration()`: 인터페이스명, 네임스페이스 추출 → TypeNode 생성
 
-- [ ] **P2-05. 비동기 분석 처리**
-  - `Task.Run()`으로 분석 로직을 백그라운드 스레드에서 실행
-  - UI 스레드 프리징 방지
-  - 분석 시작/완료 이벤트를 UI에 전달
+- [ ] **P2-03c. RoslynAnalyzer — 상속 / 인터페이스 구현 엣지 추출** _(~30분, 검증: 엣지 Source-Target 쌍 콘솔 출력)_
+  - base type / interface 목록 → DependencyEdge (Inheritance / InterfaceImpl) 생성
+  - 분석된 타입 목록에 없는 타입은 엣지에서 제외 (단순 이름 매칭)
 
-### 완료 기준 (Definition of Done)
-- 샘플 C# 폴더(10개 이상 .cs 파일)에 대해 class/interface 노드가 정확히 추출된다
-- 상속, 인터페이스 구현, 필드 타입 의존성 3종의 엣지가 정확히 추출된다
-- partial class가 하나의 노드로 병합된다
-- 외부 타입(System.*, 등)이 노드/엣지에서 제외된다
-- 에러가 있는 .cs 파일이 포함되어도 나머지 파일은 정상 분석된다
-- 분석 중 UI가 프리징되지 않는다
+- [ ] **P2-04. 기본 에러 핸들링**
+  - try-catch로 파싱 실패 파일을 건너뛰고 Errors 리스트에 기록
 
-### 검증 시나리오
-```
-1. 테스트용 C# 프로젝트 폴더를 준비 (상속, 인터페이스, 필드 의존성 포함)
-2. FolderScanner로 .cs 파일 목록 수집 확인
-3. RoslynAnalyzer로 분석 실행 후 AnalysisResult 검증:
-   - 노드 수가 예상 class/interface 수와 일치
-   - 엣지 유형별 개수 확인
-   - 외부 타입이 결과에 미포함 확인
-4. 의도적 구문 에러 파일 포함 후 분석 - 에러 파일 외 정상 분석 확인
-5. 50개 클래스 규모 폴더에서 비동기 분석 시 UI 응답성 확인
-```
+### Extension (시간 남으면)
+
+- [ ] **P2-EX-01. 필드 타입 의존성 추출**
+  - `VisitFieldDeclaration()`으로 필드 타입 추출 → FieldDependency 엣지 생성
+- [ ] **P2-EX-02. partial class 병합**
+  - 동일 FullName 노드를 하나로 합산 (FieldCount, MethodCount 누적)
+- [ ] **P2-EX-03. 외부 타입 정밀 필터링**
+  - `using` 문 파싱으로 네임스페이스 추론 보완
+- [ ] **P2-EX-04. 비동기 분석 (`Task.Run`)**
+  - UI 프리징 방지 (소규모 프로젝트에선 동기도 무방)
+
+### 완료 기준
+- 샘플 .cs 파일에서 class/interface 노드와 상속/인터페이스 엣지가 추출된다
+- 에러 파일이 있어도 나머지 파일은 정상 분석된다
 
 ### 기술 고려사항
-- Roslyn ParseText는 단일 파일 파싱이므로 SemanticModel 없이 SyntaxTree만 사용
-- 필드 타입의 정확한 네임스페이스 매칭은 SyntaxTree만으로 한계가 있음 -> 타입 이름 문자열 매칭으로 처리 (MVP 타협점)
-- `using` 문 분석으로 네임스페이스 추론 보완 가능
-- generic 타입 인자(`List<T>`)는 MVP에서 의존성 추적하지 않음
+- Roslyn ParseText는 SemanticModel 없이 SyntaxTree만 사용 (네임스페이스 매칭은 이름 기반 휴리스틱)
+- 필드 타입 매칭 정확도는 MVP에서 타협 (SemanticModel 도입은 Sprint 2 검토)
+- Generic 타입 인자(`List<T>`)는 MVP에서 의존성 추적하지 않음
 
 ---
 
-## Phase 3: 그래프 시각화 및 상호작용 (Sprint 1 - Week 2)
+## Phase 3: 그래프 시각화 (3:00 – 5:00)
 
 ### 목표
-AnalysisResult를 Microsoft.Msagl 그래프로 변환하고, 계층형 레이아웃으로 렌더링하며, 노드 호버/클릭/검색 상호작용을 구현한다.
+GraphModel을 Msagl 그래프로 변환하고 GViewer에 렌더링한다. 폴더 열기 파이프라인을 연결하고 StatusBar를 완성해 MVP를 완료한다.
 
-### 작업 목록
+### Core (반드시 완료)
 
-- [ ] **P3-01. MsaglRenderer 구현**
-  - AnalysisResult -> Microsoft.Msagl.Drawing.Graph 변환
-  - 노드 생성: `graph.AddNode()`, 라벨에 `Namespace.ClassName` 표시
-  - 엣지 생성 및 스타일 적용:
-    - 상속: 실선, 검정색 (`Color.Black`, `Style.Solid`)
-    - 인터페이스 구현: 점선, 파란색 (`Color.Blue`, `Style.Dashed`)
-    - 필드 의존성: 실선, 회색 (`Color.Gray`, `Style.Solid`, 가는 선)
-  - 계층형(Sugiyama) 레이아웃 설정
+- [ ] **P3-01a. MsaglRenderer — 노드만 렌더링** _(~30분, 검증: GViewer에 노드 박스가 표시되면 성공)_
+  - AnalysisResult.Nodes → `graph.AddNode()`, 라벨에 `ClassName` 표시
+  - 계층형(Sugiyama) 레이아웃 설정 후 GViewer에 표시
+
+- [ ] **P3-01b. MsaglRenderer — 엣지 추가** _(~30분, 검증: 노드 간 화살표가 그려지면 성공)_
+  - AnalysisResult.Edges → `graph.AddEdge()` (기본 스타일 단색으로 우선 표시)
 
 - [ ] **P3-02. GViewer 통합**
-  - MainForm의 Graph Canvas Panel에 `GViewer` 컨트롤 배치
-  - `GViewer.Graph` 속성에 생성된 Graph 할당
-  - 기본 줌/팬 기능은 GViewer 내장 기능 활용
+  - Panel에 `GViewer` 배치 (Dock: Fill)
+  - `GViewer.Graph`에 생성된 Graph 할당
 
-- [ ] **P3-03. 폴더 열기 연동**
-  - Toolbar의 "폴더 열기" 버튼 클릭 -> `FolderBrowserDialog` 표시
-  - 폴더 선택 -> FolderScanner -> RoslynAnalyzer -> MsaglRenderer -> GViewer 파이프라인 연결
-  - "새로고침" 버튼: 마지막으로 열었던 폴더를 다시 분석
+- [ ] **P3-03. 폴더 열기 파이프라인 연결**
+  - 폴더 열기 버튼 → `FolderBrowserDialog` → FolderScanner → RoslynAnalyzer → MsaglRenderer → GViewer
+  - 새로고침 버튼: 마지막 폴더 재분석
 
-- [ ] **P3-04. 노드 호버 툴팁**
+- [ ] **P3-04. StatusBar 연동**
+  - "분석 완료 (N개 클래스) | 에러: M개 파일" 형태 표시
+
+### Extension (시간 남으면)
+
+- [ ] **P3-EX-01. 엣지 색상/스타일 구분**
+  - 상속: 실선, 검정 / 인터페이스 구현: 점선, 파랑 / 필드 의존성: 실선, 회색
+- [ ] **P3-EX-02. 노드 라벨에 네임스페이스 표시**
+  - `Namespace.ClassName` 형식으로 변경
+- [ ] **P3-EX-03. 새로고침 버튼 활성화 로직**
+  - 폴더 열기 전에는 비활성화
+
+### 완료 기준
+- 폴더를 열면 3번의 클릭 이내에 그래프가 표시된다
+- StatusBar에 분석 결과 요약이 표시된다
+
+### 검증 시나리오
+```
+1. 앱 실행 → 폴더 열기 → 샘플 C# 폴더 선택 → 그래프 표시 확인
+2. StatusBar에 "분석 완료 (N개 클래스)" 형태 표시 확인
+3. 새로고침 버튼 클릭 → 동일 폴더 재분석 확인
+```
+
+### 기술 고려사항
+- GViewer 자체 줌/팬/드래그 기능 활용 (별도 구현 불필요)
+- 엣지 스타일(점선 등) Msagl API 삽질 가능성 → Extension으로 분리한 이유
+
+---
+
+## Sprint 1 MVP 완료 기준
+
+| 기준 | 측정 방법 |
+|------|----------|
+| C# 폴더를 열면 3번의 클릭 이내에 그래프가 표시된다 | 직접 테스트 |
+| class/interface 노드가 그래프에 표시된다 | 샘플 프로젝트 확인 |
+| 상속/인터페이스 구현 엣지가 표시된다 | 샘플 프로젝트 확인 |
+| 에러 파일이 있어도 정상 파일은 분석된다 | 의도적 에러 파일 포함 테스트 |
+| StatusBar에 분석 결과 요약이 표시된다 | 직접 확인 |
+
+---
+
+## Phase 4: 노드 인터랙션 및 고급 분석 (Sprint 2)
+
+### 목표
+Sprint 1에서 미뤄진 노드 인터랙션 기능을 구현하고, 메서드 호출 의존성·순환 감지·코드 스멜 지표를 추가한다.
+
+### 작업 목록
+
+- [ ] **P4-01. 노드 호버 툴팁**
   - GViewer의 `ObjectUnderMouseCursor` 이벤트 활용
-  - 노드 위에 마우스 올리면 ToolTip 표시:
-    - 네임스페이스
-    - 필드 수 / 메서드 수
-    - 파일 경로
+  - 노드 위에 마우스 올리면 ToolTip 표시: 네임스페이스 / 필드 수 / 메서드 수 / 파일 경로
 
-- [ ] **P3-05. 노드 클릭 포커스 모드**
+- [ ] **P4-02. 노드 클릭 포커스 모드**
   - 노드 클릭 시: 클릭한 노드 + 1-hop 이웃 노드를 강조 표시
   - 나머지 노드는 opacity 감소 (흐리게 처리)
   - 빈 영역 클릭 시: 모든 노드 강조 해제, 원래 상태 복원
 
-- [ ] **P3-06. 검색/필터링 기능**
-  - Toolbar 검색 TextBox에 클래스 이름 입력 시 해당 노드 하이라이트
-  - 실시간 검색 (TextChanged 이벤트)
+- [ ] **P4-03. 검색/필터링 기능**
+  - Toolbar에 검색 TextBox 추가
+  - 클래스 이름 입력 시 해당 노드 하이라이트 (TextChanged 이벤트)
   - 매칭 노드 강조 + 그래프 중심을 해당 노드로 이동
 
-- [ ] **P3-07. StatusBar 연동**
-  - 분석 상태 표시: "분석 중...", "분석 완료 (N개 클래스)"
-  - 에러 파일 수 표시: "에러: N개 파일"
-  - 에러 파일 목록 클릭 시 상세 정보 표시 (MessageBox 또는 별도 창)
+- [ ] **P4-04. 에러 상세 표시**
+  - StatusBar 에러 영역 클릭 시 에러 파일 목록 + 메시지 상세 표시 (MessageBox 또는 별도 창)
 
-### 완료 기준 (Definition of Done)
-- 폴더를 열면 3번의 클릭(폴더 열기 버튼 -> 폴더 선택 -> 확인) 이내에 그래프가 표시된다
-- 상속/인터페이스/필드 엣지가 색상과 선 스타일로 시각적으로 구분된다
-- 노드 호버 시 네임스페이스, 필드수/메서드수, 파일 경로가 툴팁으로 표시된다
-- 노드 클릭 시 포커스 모드가 동작하고, 빈 영역 클릭 시 해제된다
-- 검색 시 매칭 노드가 하이라이트된다
-- StatusBar에 분석 결과 요약과 에러 파일 수가 표시된다
-
-### 검증 시나리오
-```
-1. 앱 실행 -> 폴더 열기 버튼 클릭 -> 샘플 C# 폴더 선택 -> 그래프 표시 확인
-2. 그래프에서 엣지 색상/스타일 구분 확인 (상속:검정실선, 인터페이스:파랑점선, 필드:회색실선)
-3. 노드에 마우스 호버 -> 툴팁에 네임스페이스, 필드수, 메서드수, 파일경로 표시 확인
-4. 노드 클릭 -> 1-hop 이웃만 강조, 나머지 흐리게 처리 확인
-5. 빈 영역 클릭 -> 전체 노드 정상 표시로 복원 확인
-6. 검색 TextBox에 클래스 이름 입력 -> 매칭 노드 하이라이트 확인
-7. StatusBar에 "분석 완료 (N개 클래스) | 에러: M개 파일" 형태 표시 확인
-8. 새로고침 버튼 클릭 -> 동일 폴더 재분석 및 그래프 갱신 확인
-```
-
-### 기술 고려사항
-- GViewer는 자체 줌/팬/드래그 기능을 제공하므로 별도 구현 불필요
-- 노드 opacity 조절은 Msagl의 `Node.Attr.FillColor`에 Alpha 값 조절로 구현
-- 검색 시 `GViewer.CenterToGroup()` 또는 직접 뷰포트 이동으로 해당 노드로 스크롤
-- GViewer의 이벤트 모델을 먼저 프로토타이핑하여 호버/클릭 동작 검증 권장
-
----
-
-## Sprint 1 MVP 마일스톤
-
-**목표 달성 기준 (PRD Section 8 기반):**
-
-| 기준 | 측정 방법 | Phase |
-|------|----------|-------|
-| C# 폴더를 열면 3번의 클릭 이내에 그래프가 표시된다 | 직접 사용 테스트 | Phase 3 |
-| 클래스 상속/인터페이스/필드 엣지가 시각적으로 구분된다 | 샘플 프로젝트로 확인 | Phase 3 |
-| 에러가 있는 파일이 포함된 폴더도 정상 파일은 분석된다 | 의도적 에러 파일 포함 후 테스트 | Phase 2 |
-| 호버 시 클래스 정보가 툴팁으로 표시된다 | 직접 확인 | Phase 3 |
-
----
-
-## Phase 4: 메서드 호출 의존성 및 순환 감지 (Sprint 2)
-
-### 목표
-메서드 호출 의존성 분석, 순환 의존성 감지 및 경고, 코드 스멜 지표를 추가한다.
-
-### 작업 목록
-
-- [ ] **P4-01. 메서드 호출 의존성 분석**
+- [ ] **P4-05. 메서드 호출 의존성 분석**
   - `VisitInvocationExpression()`으로 메서드 호출 추출
   - 호출자 클래스 -> 피호출자 클래스 의존성 엣지 생성
   - EdgeType에 `MethodCall` 유형 추가
   - 시각화: 별도 색상/스타일 (예: 주황색 점선)
 
-- [ ] **P4-02. 순환 의존성 감지**
+- [ ] **P4-06. 순환 의존성 감지**
   - 그래프에서 Cycle Detection 알고리즘 구현 (DFS 기반 Tarjan 또는 간단 DFS)
   - 순환이 감지되면 해당 엣지를 빨간색으로 강조 표시
   - StatusBar 또는 별도 경고 패널에 순환 의존성 경고 메시지 표시
   - 순환 그룹 클릭 시 관련 노드 하이라이트
 
-- [ ] **P4-03. 코드 스멜 지표 시각화**
+- [ ] **P4-07. 코드 스멜 지표 시각화**
   - 클래스별 지표 계산:
     - 참조 횟수 (Afferent Coupling, Ca): 다른 클래스가 이 클래스를 참조하는 수
     - 의존도 지수 (Efferent Coupling, Ce): 이 클래스가 의존하는 다른 클래스 수
@@ -276,12 +262,15 @@ AnalysisResult를 Microsoft.Msagl 그래프로 변환하고, 계층형 레이아
   - 노드 크기 또는 색상 농도로 지표 시각화
   - 툴팁에 지표 수치 추가 표시
 
-- [ ] **P4-04. struct / record / enum 지원**
+- [ ] **P4-08. struct / record / enum 지원**
   - RoslynAnalyzer에 `VisitStructDeclaration()`, `VisitRecordDeclaration()`, `VisitEnumDeclaration()` 추가
   - TypeKind enum에 Struct, Record, Enum 추가
   - 노드 모양 또는 색상으로 타입 종류 구분 (예: class=사각형, interface=원, struct=다이아몬드)
 
 ### 완료 기준 (Definition of Done)
+- 노드 호버 시 네임스페이스, 필드수/메서드수, 파일 경로가 툴팁으로 표시된다
+- 노드 클릭 시 포커스 모드가 동작하고, 빈 영역 클릭 시 해제된다
+- 검색 시 매칭 노드가 하이라이트된다
 - 메서드 호출 관계가 별도 색상의 엣지로 그래프에 표시된다
 - 순환 의존성이 존재할 때 빨간색 엣지와 경고 메시지가 표시된다
 - 각 노드의 참조 횟수/의존도 지표가 툴팁에 표시된다
@@ -430,7 +419,7 @@ Phase 6 (내보내기/마무리)  <-- 전체 기능 안정화 후
 
 | 마일스톤 | 목표 시점 | 핵심 산출물 |
 |---------|----------|------------|
-| M1: Sprint 1 MVP | Week 2 완료 | 폴더 열기 -> 그래프 표시 + 호버/클릭/검색 동작하는 실행 파일 |
+| M1: Sprint 1 MVP | Week 2 완료 | 폴더 열기 -> 그래프 표시 + StatusBar 분석 결과 표시 실행 파일 |
 | M2: 고급 분석 | Week 4 완료 | 메서드 호출, 순환 감지, 코드 스멜, struct/record/enum 지원 |
 | M3: 사용성 개선 | Week 6 완료 | 네임스페이스 필터, 변경 영향 분석, 단위 테스트 |
 | M4: v1.0 릴리스 | Week 8 완료 | PNG 내보내기, 전체 안정화, 키보드 단축키, 최근 폴더 |
