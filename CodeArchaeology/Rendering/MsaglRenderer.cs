@@ -31,8 +31,15 @@ public class MsaglRenderer
     // 순환 의존성 색상
     private static readonly Microsoft.Msagl.Drawing.Color CycleEdge    = new(220, 60, 60);
     private static readonly Microsoft.Msagl.Drawing.Color CycleFill    = new(100, 30, 30);
+    // 영향 분석 색상
+    private static readonly Microsoft.Msagl.Drawing.Color ImpactRootFill   = new(200, 100, 20);  // 진한 주황
+    private static readonly Microsoft.Msagl.Drawing.Color ImpactRootBorder = new(255, 160, 60);  // 밝은 주황
+    private static readonly Microsoft.Msagl.Drawing.Color ImpactFill       = new(120, 70, 10);   // 어두운 주황
+    private static readonly Microsoft.Msagl.Drawing.Color ImpactBorder     = new(220, 140, 50);  // 중간 주황
+    private static readonly Microsoft.Msagl.Drawing.Color ImpactEdge       = new(220, 140, 50);
 
-    public GViewer BuildViewer(AnalysisResult result, string searchQuery = "", string focusNodeId = "")
+    public GViewer BuildViewer(AnalysisResult result, string searchQuery = "", string focusNodeId = "",
+        string impactRootId = "", HashSet<string>? impactSet = null)
     {
         var graph = new Graph("dependency")
         {
@@ -52,10 +59,12 @@ public class MsaglRenderer
             .GroupBy(n => n.Name)
             .ToDictionary(g => g.Key, g => g.First().FullName);
 
-        var hasSearch  = !string.IsNullOrWhiteSpace(searchQuery);
-        var hasFocus   = !string.IsNullOrWhiteSpace(focusNodeId);
-        var cycleEdges = Analysis.CycleDetector.FindCycleEdges(result);
-        var cycleNodes = new HashSet<string>(
+        var hasSearch   = !string.IsNullOrWhiteSpace(searchQuery);
+        var hasFocus    = !string.IsNullOrWhiteSpace(focusNodeId);
+        var hasImpact   = !string.IsNullOrWhiteSpace(impactRootId);
+        impactSet     ??= new HashSet<string>();
+        var cycleEdges  = Analysis.CycleDetector.FindCycleEdges(result);
+        var cycleNodes  = new HashSet<string>(
             cycleEdges.SelectMany(e => new[] { e.Source, e.Target }));
 
         // 포커스 모드: 클릭 노드 + 1-hop 이웃 집합
@@ -74,6 +83,38 @@ public class MsaglRenderer
         {
             var dn = graph.AddNode(node.FullName);
             dn.LabelText = node.FullName;
+
+            // 영향 분석 모드가 활성이면 영향 노드 우선 처리
+            if (hasImpact)
+            {
+                var isRoot   = node.Name == impactRootId;
+                var isImpact = impactSet.Contains(node.Name);
+
+                dn.Label.FontSize = 10;
+                dn.Attr.Shape     = node.Kind == TypeKind.Interface ? Shape.Ellipse : Shape.Box;
+                if (isRoot)
+                {
+                    dn.Label.FontColor = NodeText;
+                    dn.Attr.FillColor  = ImpactRootFill;
+                    dn.Attr.Color      = ImpactRootBorder;
+                    dn.Attr.LineWidth  = 3.0;
+                }
+                else if (isImpact)
+                {
+                    dn.Label.FontColor = NodeText;
+                    dn.Attr.FillColor  = ImpactFill;
+                    dn.Attr.Color      = ImpactBorder;
+                    dn.Attr.LineWidth  = 2.0;
+                }
+                else
+                {
+                    dn.Label.FontColor = DimText;
+                    dn.Attr.FillColor  = DimFill;
+                    dn.Attr.Color      = DimBorder;
+                    dn.Attr.LineWidth  = 1.0;
+                }
+                continue;
+            }
 
             var isMatch = (!hasSearch ||
                 node.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
@@ -144,6 +185,24 @@ public class MsaglRenderer
             if (!nameToFullName.TryGetValue(edge.Target, out var targetId)) continue;
 
             var de = graph.AddEdge(sourceId, targetId);
+
+            // 영향 분석 모드: 영향 경로 엣지 강조, 나머지 dim
+            if (hasImpact)
+            {
+                var onPath = (impactSet.Contains(edge.Source) || edge.Source == impactRootId)
+                          && (impactSet.Contains(edge.Target) || edge.Target == impactRootId);
+                if (onPath)
+                {
+                    de.Attr.Color     = ImpactEdge;
+                    de.Attr.LineWidth = 2.0;
+                }
+                else
+                {
+                    de.Attr.Color     = DimBorder;
+                    de.Attr.LineWidth = 0.5;
+                }
+                continue;
+            }
 
             var edgeDimmed = hasFocus &&
                 (!focusSet.Contains(edge.Source) || !focusSet.Contains(edge.Target));

@@ -126,6 +126,10 @@ public partial class MainForm : Form
     private Point _mouseDownPoint  = Point.Empty;
     private bool  _wasDragged      = false;
 
+    // 영향 분석 상태
+    private string          _impactRootId = string.Empty;
+    private HashSet<string> _impactSet    = new();
+
     private void btnPanMode_Click(object? sender, EventArgs e)
     {
         _panToggled = !_panToggled;
@@ -283,12 +287,67 @@ public partial class MainForm : Form
             lstErrors.Items.Add(err);
     }
 
+    // ── 영향 분석 ────────────────────────────────────────────────────────
+
+    private void btnImpact_Click(object? sender, EventArgs e)
+    {
+        // 영향 분석 활성 상태 → 해제
+        if (!string.IsNullOrEmpty(_impactRootId))
+        {
+            _impactRootId = string.Empty;
+            _impactSet    = new();
+            UpdateImpactButton();
+            RebuildGraphFiltered();
+            SetStatus("영향 분석 해제");
+            return;
+        }
+
+        // 선택된 노드가 없으면 무시
+        if (string.IsNullOrEmpty(_focusNodeId) || _analysisResult == null) return;
+
+        _impactRootId = _focusNodeId;
+        _impactSet    = ComputeImpactSet(_impactRootId);
+        UpdateImpactButton();
+        RebuildGraphFiltered();
+        SetStatus($"영향 분석: [{_impactRootId}] — 영향 범위 {_impactSet.Count}개 클래스");
+    }
+
+    private void UpdateImpactButton()
+    {
+        var active = !string.IsNullOrEmpty(_impactRootId);
+        btnImpact.BackColor = active
+            ? Color.FromArgb(160, 80, 10)
+            : Color.FromArgb(55, 55, 60);
+        btnImpact.Text = active ? "🔍 영향 분석 해제" : "🔍 영향 분석";
+    }
+
+    // 역방향 BFS — rootId를 직간접적으로 참조하는 모든 노드 반환 (root 제외)
+    private HashSet<string> ComputeImpactSet(string rootId)
+    {
+        var visited = new HashSet<string>();
+        var queue   = new Queue<string>();
+        queue.Enqueue(rootId);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            foreach (var edge in _analysisResult!.Edges)
+            {
+                if (edge.Target == current && visited.Add(edge.Source))
+                    queue.Enqueue(edge.Source);
+            }
+        }
+
+        visited.Remove(rootId);
+        return visited;
+    }
+
     // ── Graph Rebuild ────────────────────────────────────────────────────
 
     private void RebuildGraph(Models.AnalysisResult result)
     {
         var renderer = new Rendering.MsaglRenderer();
-        _gViewer = renderer.BuildViewer(result, _currentSearch, _focusNodeId);
+        _gViewer = renderer.BuildViewer(result, _currentSearch, _focusNodeId, _impactRootId, _impactSet);
         _gViewer.ToolBarIsVisible = false;
         _gViewer.MouseDown  += gViewer_MouseDown;
         _gViewer.MouseClick += gViewer_MouseClick;
@@ -308,9 +367,16 @@ public partial class MainForm : Form
         btnPanMode.Visible = true;
         btnPanMode.BringToFront();
 
+        btnImpact.Location = new Point(12 + btnPanMode.Width + 8, 12);
+        btnImpact.Enabled  = !string.IsNullOrEmpty(_focusNodeId) || !string.IsNullOrEmpty(_impactRootId);
+        pnlGraph.Controls.Add(btnImpact);
+        btnImpact.Visible = true;
+        btnImpact.BringToFront();
+
         // GViewer가 패널에 추가된 후 pan 상태 복원
         ApplyPanMode(_panToggled);
         UpdatePanButton();
+        UpdateImpactButton();
     }
 
     // ── Class Info ───────────────────────────────────────────────────────
@@ -371,6 +437,8 @@ public partial class MainForm : Form
             return;
         }
 
+        if (e.Button == MouseButtons.Right) return;
+
         if (_gViewer?.ObjectUnderMouseCursor is Microsoft.Msagl.Drawing.IViewerNode viewerNode
             && _analysisResult != null)
         {
@@ -389,12 +457,17 @@ public partial class MainForm : Form
                     _focusNodeId = typeNode.Name;
                     ShowClassInfo(typeNode);
                 }
+                btnImpact.Enabled = !string.IsNullOrEmpty(_focusNodeId) || !string.IsNullOrEmpty(_impactRootId);
                 RebuildGraphFiltered();
                 return;
             }
         }
-        // 빈 곳 클릭 → 포커스 해제
-        _focusNodeId = string.Empty;
+        // 빈 곳 클릭 → 포커스 및 영향 분석 해제
+        _focusNodeId  = string.Empty;
+        _impactRootId = string.Empty;
+        _impactSet    = new();
+        btnImpact.Enabled = false;
+        UpdateImpactButton();
         RebuildGraphFiltered();
         ClearClassInfo();
     }

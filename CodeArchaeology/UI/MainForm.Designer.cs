@@ -14,6 +14,7 @@ partial class MainForm
     private void InitializeComponent()
     {
         components = new System.ComponentModel.Container();
+        InitImpactButton();
         nodeToolTip = new ToolTip(components)
         {
             AutoPopDelay = 8000,
@@ -436,6 +437,23 @@ partial class MainForm
         return (row, val);
     }
 
+    private void InitImpactButton()
+    {
+        btnImpact = new Button
+        {
+            Text      = "🔍 영향 분석",
+            AutoSize  = true,
+            BackColor = Color.FromArgb(55, 55, 60),
+            ForeColor = Color.FromArgb(210, 210, 210),
+            FlatStyle = FlatStyle.Flat,
+            Font      = new Font("Segoe UI", 9f),
+            Cursor    = Cursors.Hand,
+            Enabled   = false
+        };
+        btnImpact.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 90);
+        btnImpact.Click += btnImpact_Click;
+    }
+
     private SplitContainer splitOuter;
     private SplitContainer splitInner;
     private SplitContainer splitLeft;
@@ -468,5 +486,6 @@ partial class MainForm
     private ToolStripStatusLabel lblFolderPath;
     private ToolStripTextBox txtSearch;
     private Button btnPanMode;
+    private Button btnImpact;
     private ToolTip nodeToolTip;
 }
