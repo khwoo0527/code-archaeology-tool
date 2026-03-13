@@ -1,6 +1,6 @@
 namespace CodeArchaeology.Models;
 
-public enum TypeKind { Class, Interface }
+public enum TypeKind { Class, Interface, Struct, Record, Enum }
 
 public class TypeNode
 {

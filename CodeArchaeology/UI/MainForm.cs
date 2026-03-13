@@ -246,6 +246,8 @@ public partial class MainForm : Form
         var renderer = new Rendering.MsaglRenderer();
         _gViewer = renderer.BuildViewer(result, _currentSearch, _focusNodeId);
         _gViewer.ToolBarIsVisible = false;
+        _gViewer.PanButtonPressed = _panToggled;
+        _gViewer.Cursor           = _panToggled ? Cursors.Hand : Cursors.Default;
         _gViewer.MouseClick += gViewer_MouseClick;
         _gViewer.MouseMove  += gViewer_MouseMove;
 
@@ -332,7 +334,7 @@ public partial class MainForm : Form
     private void ShowClassInfo(Models.TypeNode node)
     {
         lblInfoName.Text       = node.Name;
-        lblInfoKindVal.Text    = node.Kind == Models.TypeKind.Interface ? "Interface" : "Class";
+        lblInfoKindVal.Text    = node.Kind.ToString();
         lblInfoNsVal.Text      = node.Namespace;
         lblInfoFileVal.Text    = Path.GetFileName(node.FilePath);
         _fieldsExpanded  = false;
@@ -428,7 +430,7 @@ public partial class MainForm : Form
         lblLegendHeader.Text     = _legendExpanded ? "범례  ▼" : "범례  ▶";
         pnlLegendContent.Visible = _legendExpanded;
         pnlLegend.Size = _legendExpanded
-            ? new Size(164, 26 + 158)
+            ? new Size(164, 26 + 218)
             : new Size(164, 26);
     }
 
@@ -494,6 +496,22 @@ public partial class MainForm : Form
         g.FillEllipse(new SolidBrush(Color.FromArgb(230, 210, 255)), xBox, y, 30, 14);
         g.DrawEllipse(new Pen(Color.FromArgb(120, 60, 180), 1.5f), xBox, y, 30, 14);
         g.DrawString("인터페이스", labelFont, textBrush, xText, y);
+        y += 20;
+
+        // 다이아몬드(struct) 근사 — 사각형 45도 회전 대신 간단히 표시
+        g.FillRectangle(new SolidBrush(Color.FromArgb(40, 90, 70)), xBox, y, 30, 14);
+        g.DrawRectangle(new Pen(Color.FromArgb(80, 200, 150), 1.5f), xBox, y, 30, 14);
+        g.DrawString("struct", labelFont, textBrush, xText, y);
+        y += 20;
+
+        g.FillRectangle(new SolidBrush(Color.FromArgb(90, 70, 30)), xBox, y, 30, 14);
+        g.DrawRectangle(new Pen(Color.FromArgb(220, 180, 80), 1.5f), xBox, y, 30, 14);
+        g.DrawString("record", labelFont, textBrush, xText, y);
+        y += 20;
+
+        g.FillRectangle(new SolidBrush(Color.FromArgb(60, 50, 90)), xBox, y, 30, 14);
+        g.DrawRectangle(new Pen(Color.FromArgb(160, 130, 240), 1.5f), xBox, y, 30, 14);
+        g.DrawString("enum", labelFont, textBrush, xText, y);
         y += 22;
 
         using (var pen = new Pen(Color.FromArgb(180, 180, 180), 2f))

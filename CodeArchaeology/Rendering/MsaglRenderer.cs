@@ -21,6 +21,13 @@ public class MsaglRenderer
     private static readonly Microsoft.Msagl.Drawing.Color DimFill      = new(38, 38, 42);
     private static readonly Microsoft.Msagl.Drawing.Color DimBorder    = new(58, 58, 62);
     private static readonly Microsoft.Msagl.Drawing.Color DimText      = new(75, 75, 80);
+    // struct / record / enum 색상
+    private static readonly Microsoft.Msagl.Drawing.Color StructFill   = new(40, 90, 70);   // 진한 녹청
+    private static readonly Microsoft.Msagl.Drawing.Color StructBorder = new(80, 200, 150);  // 밝은 녹청
+    private static readonly Microsoft.Msagl.Drawing.Color RecordFill   = new(90, 70, 30);   // 진한 황토
+    private static readonly Microsoft.Msagl.Drawing.Color RecordBorder = new(220, 180, 80);  // 밝은 황토
+    private static readonly Microsoft.Msagl.Drawing.Color EnumFill     = new(60, 50, 90);   // 진한 자주
+    private static readonly Microsoft.Msagl.Drawing.Color EnumBorder   = new(160, 130, 240); // 밝은 자주
     // 순환 의존성 색상
     private static readonly Microsoft.Msagl.Drawing.Color CycleEdge    = new(220, 60, 60);
     private static readonly Microsoft.Msagl.Drawing.Color CycleFill    = new(100, 30, 30);
@@ -80,21 +87,39 @@ public class MsaglRenderer
 
                 var inCycle = cycleNodes.Contains(node.Name);
 
-                if (node.Kind == TypeKind.Interface)
+                dn.Attr.LineWidth = inCycle ? 2.5 : 1.5;
+
+                switch (node.Kind)
                 {
-                    dn.Attr.Shape = Shape.Ellipse;
-                    dn.Attr.FillColor = inCycle ? CycleFill : IfaceFill;
-                    dn.Attr.Color     = inCycle ? CycleEdge : IfaceBorder;
-                    dn.Attr.LineWidth = inCycle ? 2.5 : 1.5;
-                }
-                else
-                {
-                    dn.Attr.Shape = Shape.Box;
-                    dn.Attr.FillColor = inCycle ? CycleFill : ClassFill;
-                    dn.Attr.Color     = inCycle ? CycleEdge : ClassBorder;
-                    dn.Attr.LineWidth = inCycle ? 2.5 : 1.5;
-                    dn.Attr.XRadius = 3;
-                    dn.Attr.YRadius = 3;
+                    case TypeKind.Interface:
+                        dn.Attr.Shape     = Shape.Ellipse;
+                        dn.Attr.FillColor = inCycle ? CycleFill : IfaceFill;
+                        dn.Attr.Color     = inCycle ? CycleEdge : IfaceBorder;
+                        break;
+                    case TypeKind.Struct:
+                        dn.Attr.Shape     = Shape.Diamond;
+                        dn.Attr.FillColor = inCycle ? CycleFill : StructFill;
+                        dn.Attr.Color     = inCycle ? CycleEdge : StructBorder;
+                        break;
+                    case TypeKind.Record:
+                        dn.Attr.Shape     = Shape.Box;
+                        dn.Attr.FillColor = inCycle ? CycleFill : RecordFill;
+                        dn.Attr.Color     = inCycle ? CycleEdge : RecordBorder;
+                        dn.Attr.XRadius   = 10;
+                        dn.Attr.YRadius   = 10;
+                        break;
+                    case TypeKind.Enum:
+                        dn.Attr.Shape     = Shape.Hexagon;
+                        dn.Attr.FillColor = inCycle ? CycleFill : EnumFill;
+                        dn.Attr.Color     = inCycle ? CycleEdge : EnumBorder;
+                        break;
+                    default: // Class
+                        dn.Attr.Shape     = Shape.Box;
+                        dn.Attr.FillColor = inCycle ? CycleFill : ClassFill;
+                        dn.Attr.Color     = inCycle ? CycleEdge : ClassBorder;
+                        dn.Attr.XRadius   = 3;
+                        dn.Attr.YRadius   = 3;
+                        break;
                 }
             }
             else

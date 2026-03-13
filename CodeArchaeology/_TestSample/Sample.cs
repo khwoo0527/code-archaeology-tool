@@ -23,3 +23,8 @@ public class Cat : Animal
 public class NodeA { private NodeB _b; }
 public class NodeB { private NodeC _c; }
 public class NodeC { private NodeA _a; }
+
+// struct / record / enum 검증용
+public struct Point { public int X; public int Y; }
+public record PersonRecord(string Name, int Age);
+public enum Direction { North, South, East, West }

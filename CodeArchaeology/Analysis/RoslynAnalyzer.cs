@@ -225,13 +225,68 @@ internal class TypeWalker : CSharpSyntaxWalker
     {
         Nodes.Add(new TypeNode
         {
-            Name = node.Identifier.Text,
-            Namespace = _currentNamespace,
-            FilePath = _filePath,
-            Kind = TypeKind.Interface,
-            MethodCount = node.Members.OfType<MethodDeclarationSyntax>().Count()
+            Name        = node.Identifier.Text,
+            Namespace   = _currentNamespace,
+            FilePath    = _filePath,
+            Kind        = TypeKind.Interface,
+            MethodCount = node.Members.OfType<MethodDeclarationSyntax>().Count(),
+            MethodNames = node.Members.OfType<MethodDeclarationSyntax>()
+                .Select(m => m.Identifier.Text).ToList()
+        });
+        base.VisitInterfaceDeclaration(node);
+    }
+
+    public override void VisitStructDeclaration(StructDeclarationSyntax node)
+    {
+        Nodes.Add(new TypeNode
+        {
+            Name        = node.Identifier.Text,
+            Namespace   = _currentNamespace,
+            FilePath    = _filePath,
+            Kind        = TypeKind.Struct,
+            FieldCount  = node.Members.OfType<FieldDeclarationSyntax>().Count(),
+            MethodCount = node.Members.OfType<MethodDeclarationSyntax>().Count(),
+            FieldNames  = node.Members.OfType<FieldDeclarationSyntax>()
+                .SelectMany(f => f.Declaration.Variables.Select(v => v.Identifier.Text)).ToList(),
+            MethodNames = node.Members.OfType<MethodDeclarationSyntax>()
+                .Select(m => m.Identifier.Text).ToList()
         });
 
-        base.VisitInterfaceDeclaration(node);
+        _currentClassName = node.Identifier.Text;
+        base.VisitStructDeclaration(node);
+        _currentClassName = null;
+    }
+
+    public override void VisitRecordDeclaration(RecordDeclarationSyntax node)
+    {
+        Nodes.Add(new TypeNode
+        {
+            Name        = node.Identifier.Text,
+            Namespace   = _currentNamespace,
+            FilePath    = _filePath,
+            Kind        = TypeKind.Record,
+            FieldCount  = node.Members.OfType<FieldDeclarationSyntax>().Count(),
+            MethodCount = node.Members.OfType<MethodDeclarationSyntax>().Count(),
+            FieldNames  = node.Members.OfType<FieldDeclarationSyntax>()
+                .SelectMany(f => f.Declaration.Variables.Select(v => v.Identifier.Text)).ToList(),
+            MethodNames = node.Members.OfType<MethodDeclarationSyntax>()
+                .Select(m => m.Identifier.Text).ToList()
+        });
+
+        _currentClassName = node.Identifier.Text;
+        base.VisitRecordDeclaration(node);
+        _currentClassName = null;
+    }
+
+    public override void VisitEnumDeclaration(EnumDeclarationSyntax node)
+    {
+        Nodes.Add(new TypeNode
+        {
+            Name      = node.Identifier.Text,
+            Namespace = _currentNamespace,
+            FilePath  = _filePath,
+            Kind      = TypeKind.Enum
+        });
+        base.VisitEnumDeclaration(node);
     }
 }
