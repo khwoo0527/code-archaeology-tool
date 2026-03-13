@@ -92,8 +92,10 @@ public partial class MainForm : Form
 
     // ── Pan Mode ─────────────────────────────────────────────────────────
 
-    private bool _panToggled  = false;
-    private bool _spaceHeld   = false;
+    private bool  _panToggled      = false;
+    private bool  _spaceHeld       = false;
+    private Point _mouseDownPoint  = Point.Empty;
+    private bool  _wasDragged      = false;
 
     private void btnPanMode_Click(object? sender, EventArgs e)
     {
@@ -105,8 +107,21 @@ public partial class MainForm : Form
     private void ApplyPanMode(bool pan)
     {
         if (_gViewer == null) return;
-        _gViewer.PanButtonPressed = pan;
+
+        // MSAGL 1.1.6 — PanButton/SelectButton이 public API가 아니므로 리플렉션으로 접근
+        var type = _gViewer.GetType();
+        SetButtonChecked(type, _gViewer, "panButton",    pan);
+        SetButtonChecked(type, _gViewer, "selectButton", !pan);
+
         _gViewer.Cursor = pan ? Cursors.Hand : Cursors.Default;
+    }
+
+    private static void SetButtonChecked(Type viewerType, object viewer, string fieldName, bool value)
+    {
+        var field = viewerType.GetField(fieldName,
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (field?.GetValue(viewer) is ToolStripButton btn)
+            btn.Checked = value;
     }
 
     private void UpdatePanButton()
@@ -246,8 +261,7 @@ public partial class MainForm : Form
         var renderer = new Rendering.MsaglRenderer();
         _gViewer = renderer.BuildViewer(result, _currentSearch, _focusNodeId);
         _gViewer.ToolBarIsVisible = false;
-        _gViewer.PanButtonPressed = _panToggled;
-        _gViewer.Cursor           = _panToggled ? Cursors.Hand : Cursors.Default;
+        _gViewer.MouseDown  += gViewer_MouseDown;
         _gViewer.MouseClick += gViewer_MouseClick;
         _gViewer.MouseMove  += gViewer_MouseMove;
 
@@ -264,6 +278,9 @@ public partial class MainForm : Form
         pnlGraph.Controls.Add(btnPanMode);
         btnPanMode.Visible = true;
         btnPanMode.BringToFront();
+
+        // GViewer가 패널에 추가된 후 pan 상태 복원
+        ApplyPanMode(_panToggled);
         UpdatePanButton();
     }
 
@@ -273,6 +290,15 @@ public partial class MainForm : Form
 
     private void gViewer_MouseMove(object? sender, MouseEventArgs e)
     {
+        // 마우스 버튼 눌린 채 이동 → 드래그로 판정 (팬 중 click 이벤트 차단용)
+        if (e.Button != MouseButtons.None && _mouseDownPoint != Point.Empty)
+        {
+            var dx = e.X - _mouseDownPoint.X;
+            var dy = e.Y - _mouseDownPoint.Y;
+            if (dx * dx + dy * dy > 25) // 5px 이상 이동
+                _wasDragged = true;
+        }
+
         if (_gViewer == null || _analysisResult == null) return;
 
         if (_gViewer.ObjectUnderMouseCursor is Microsoft.Msagl.Drawing.IViewerNode viewerNode)
@@ -301,8 +327,21 @@ public partial class MainForm : Form
         }
     }
 
+    private void gViewer_MouseDown(object? sender, MouseEventArgs e)
+    {
+        _mouseDownPoint = e.Location;
+        _wasDragged     = false;
+    }
+
     private void gViewer_MouseClick(object? sender, MouseEventArgs e)
     {
+        // 드래그(팬) 후 mouseup = click 이벤트 발생 → 그래프 리셋 방지
+        if (_wasDragged)
+        {
+            _wasDragged = false;
+            return;
+        }
+
         if (_gViewer?.ObjectUnderMouseCursor is Microsoft.Msagl.Drawing.IViewerNode viewerNode
             && _analysisResult != null)
         {
