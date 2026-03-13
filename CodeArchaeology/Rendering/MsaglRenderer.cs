@@ -29,7 +29,7 @@ public class MsaglRenderer
         foreach (var node in result.Nodes)
         {
             var drawingNode = graph.AddNode(node.FullName);
-            drawingNode.LabelText = node.Name;
+            drawingNode.LabelText = node.FullName;
 
             drawingNode.Attr.Shape = node.Kind == TypeKind.Interface
                 ? Shape.Ellipse

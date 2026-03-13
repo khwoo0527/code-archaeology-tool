@@ -109,7 +109,7 @@
 | S-EX-01. 엣지 색상/스타일 구분 | ✅ 완료 | S-10에서 구현됨 (MsaglRenderer.cs:35-47) |
 | S-EX-02. 필드 타입 의존성 추출 | ✅ 완료 | VisitFieldDeclaration() 추가 |
 | S-EX-07. 그래프 레이아웃 튜닝 + 범례 패널 | ✅ 완료 | 사용자 피드백 반영 — TB 레이아웃, 우상단 범례 오버레이 |
-| S-EX-03. 노드 라벨 네임스페이스 표시 | 예정 | |
+| S-EX-03. 노드 라벨 네임스페이스 표시 | ✅ 완료 | |
 | S-EX-04. partial class 병합 | 예정 | |
 | S-EX-05. 비동기 처리 | 예정 | |
 
@@ -135,6 +135,12 @@
   - **레이아웃 방향 수정**: 기본 LR(좌→우) 배치 → TB(위→아래) 계층형으로 변경. `SugiyamaLayoutSettings`에 90도 회전 변환 행렬 `(0,-1,0,1,0,0)` 적용. 노드 간격 `NodeSeparation=20`, 레이어 간격 `LayerSeparation=40` 설정. 상속 계층이 위→아래로 자연스럽게 흐름.
   - **범례 패널**: 그래프 우상단 오버레이 Panel 추가. 엣지 3종(상속/인터페이스 구현/필드 의존성)을 실제 선 색상·스타일로 렌더링하여 표시. `Controls.Clear()` 후 재추가 + `BringToFront()`로 GViewer 위에 항상 표시. `Anchor = Top|Right`로 창 크기 변경 시에도 우상단 고정.
 - **이슈/결정**: `PlaneTransformation.Rotation90DegreesClockwise` 정적 속성이 MSAGL 1.1.6에 없음 → 직접 변환 행렬로 대체.
+
+---
+
+### [S-EX-03] 노드 라벨 네임스페이스 표시
+- **상태**: ✅ 완료 (2026-03-13)
+- **결과**: 노드 라벨을 기존 `ClassName` 단독 표기에서 `Namespace.ClassName` 전체 경로 형식으로 전환. `TypeNode.FullName` 프로퍼티(네임스페이스 없을 시 `Name` 단독 반환, 있을 시 `Namespace.Name` 반환)가 이미 구현되어 있어 `MsaglRenderer.cs`의 `LabelText` 할당 한 줄 변경으로 완료. 동일 클래스명이 여러 네임스페이스에 걸쳐 존재하는 대규모 프로젝트 분석 시 노드 식별 모호성이 제거됨.
 
 ---
 
