@@ -36,7 +36,8 @@ public partial class MainForm : Form
 
         var classCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Class);
         var interfaceCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Interface);
-        SetStatus($"클래스: {classCount}개 | 인터페이스: {interfaceCount}개 | .cs 파일: {files.Count}개 | 에러: {result.Errors.Count}개");
+        var edgeCount = result.Edges.Count;
+        SetStatus($"클래스: {classCount}개 | 인터페이스: {interfaceCount}개 | 관계: {edgeCount}개 | .cs 파일: {files.Count}개 | 에러: {result.Errors.Count}개");
     }
 
     public void SetStatus(string message)

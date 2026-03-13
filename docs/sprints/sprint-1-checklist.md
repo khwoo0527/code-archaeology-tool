@@ -9,9 +9,9 @@
 
 | 구분 | 완료 | 전체 | 완료율 |
 |------|------|------|--------|
-| Core (S-01 ~ S-12) | 6 | 12 | 50% |
+| Core (S-01 ~ S-12) | 7 | 12 | 58% |
 | Extension (S-EX-01 ~ S-EX-05) | 0 | 5 | 0% |
-| **Sprint 1 전체** | **6** | **17** | **35%** |
+| **Sprint 1 전체** | **7** | **17** | **41%** |
 
 ---
 
@@ -25,7 +25,7 @@
 | S-04 | FolderScanner | ✅ | 2026-03-13 |
 | S-05 | RoslynAnalyzer — class 노드 추출 | ✅ | 2026-03-13 |
 | S-06 | RoslynAnalyzer — interface 노드 추출 | ✅ | 2026-03-13 |
-| S-07 | RoslynAnalyzer — 상속/인터페이스 엣지 추출 | ⬜ | - |
+| S-07 | RoslynAnalyzer — 상속/인터페이스 엣지 추출 | ✅ | 2026-03-13 |
 | S-08 | 에러 핸들링 | ⬜ | - |
 | S-09 | MsaglRenderer + GViewer 연결 (노드 표시) | ⬜ | - |
 | S-10 | MsaglRenderer — 엣지 추가 | ⬜ | - |

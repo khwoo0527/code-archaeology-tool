@@ -16,7 +16,7 @@
 | S-04. FolderScanner | ✅ 완료 | 2026-03-13 | |
 | S-05. RoslynAnalyzer — class 노드 추출 | ✅ 완료 | 2026-03-13 | |
 | S-06. RoslynAnalyzer — interface 노드 추출 | ✅ 완료 | 2026-03-13 | |
-| S-07. RoslynAnalyzer — 상속/인터페이스 엣지 추출 | 예정 | - | |
+| S-07. RoslynAnalyzer — 상속/인터페이스 엣지 추출 | ✅ 완료 | 2026-03-13 | |
 | S-08. 에러 핸들링 | 예정 | - | |
 | S-09. MsaglRenderer + GViewer 연결 (노드 표시) | 예정 | - | |
 | S-10. MsaglRenderer — 엣지 추가 | 예정 | - | |
@@ -65,8 +65,8 @@
 ---
 
 ### [S-07] RoslynAnalyzer — 상속/인터페이스 엣지 추출
-- **상태**: 예정
-- **결과**: -
+- **상태**: ✅ 완료 (2026-03-13)
+- **결과**: 2단계 분석(노드 수집 → 엣지 추출) 구조로 구현. 내부 타입끼리만 엣지 생성(외부 타입 자동 필터). Dog→Animal(Inheritance) / Dog→IAnimal(InterfaceImpl) / Cat→Animal(Inheritance) 3개 관계 UI 확인.
 
 ---
 

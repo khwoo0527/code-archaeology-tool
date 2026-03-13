@@ -178,7 +178,7 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 
 ---
 
-### - [ ] S-07. RoslynAnalyzer — 상속 / 인터페이스 엣지 추출 `~30분`
+### - [x] S-07. RoslynAnalyzer — 상속 / 인터페이스 엣지 추출 `~30분`
 
 **구현:**
 - `VisitClassDeclaration()`에서 base type, interface 목록 파싱

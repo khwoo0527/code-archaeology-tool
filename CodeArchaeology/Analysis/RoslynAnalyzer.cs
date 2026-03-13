@@ -9,7 +9,9 @@ public class RoslynAnalyzer
     public AnalysisResult Analyze(IReadOnlyList<string> filePaths)
     {
         var result = new AnalysisResult();
+        var walkers = new List<TypeWalker>();
 
+        // 1단계: 모든 파일에서 노드(타입) 수집
         foreach (var filePath in filePaths)
         {
             try
@@ -19,14 +21,20 @@ public class RoslynAnalyzer
                 var root = tree.GetCompilationUnitRoot();
                 var walker = new TypeWalker(filePath);
                 walker.Visit(root);
-
+                walkers.Add(walker);
                 result.Nodes.AddRange(walker.Nodes);
             }
             catch (Exception ex)
             {
-                // S-08에서 에러 핸들링 강화 예정
                 result.Errors.Add($"{filePath}: {ex.Message}");
             }
+        }
+
+        // 2단계: 수집된 타입 목록 확정 후 엣지 추출 (내부 타입끼리만)
+        var knownTypeNames = result.Nodes.Select(n => n.Name).ToHashSet();
+        foreach (var walker in walkers)
+        {
+            result.Edges.AddRange(walker.GetEdges(knownTypeNames));
         }
 
         return result;
@@ -39,6 +47,9 @@ internal class TypeWalker : CSharpSyntaxWalker
     private string _currentNamespace = string.Empty;
 
     public List<TypeNode> Nodes { get; } = new();
+
+    // 엣지 추출을 위해 클래스 선언 노드를 보관
+    private readonly List<ClassDeclarationSyntax> _classDeclarations = new();
 
     public TypeWalker(string filePath)
     {
@@ -71,7 +82,42 @@ internal class TypeWalker : CSharpSyntaxWalker
             MethodCount = node.Members.OfType<MethodDeclarationSyntax>().Count()
         });
 
+        _classDeclarations.Add(node);
         base.VisitClassDeclaration(node);
+    }
+
+    public IEnumerable<DependencyEdge> GetEdges(HashSet<string> knownTypeNames)
+    {
+        foreach (var classNode in _classDeclarations)
+        {
+            if (classNode.BaseList == null) continue;
+
+            var sourceName = classNode.Identifier.Text;
+
+            foreach (var baseType in classNode.BaseList.Types)
+            {
+                var targetName = baseType.Type switch
+                {
+                    SimpleNameSyntax simple => simple.Identifier.Text,
+                    QualifiedNameSyntax qualified => qualified.Right.Identifier.Text,
+                    _ => null
+                };
+
+                if (targetName == null || !knownTypeNames.Contains(targetName)) continue;
+
+                // 대상이 interface면 InterfaceImpl, 아니면 Inheritance
+                var edgeType = targetName.StartsWith("I") && char.IsUpper(targetName.ElementAtOrDefault(1))
+                    ? EdgeType.InterfaceImpl
+                    : EdgeType.Inheritance;
+
+                yield return new DependencyEdge
+                {
+                    Source = sourceName,
+                    Target = targetName,
+                    Type = edgeType
+                };
+            }
+        }
     }
 
     public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
