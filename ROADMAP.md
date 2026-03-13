@@ -259,7 +259,7 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 
 ---
 
-### - [ ] S-12. StatusBar 연동 `~15분`
+### - [x] S-12. StatusBar 연동 `~15분`
 
 **구현:**
 - 분석 시작: `"분석 중..."`
