@@ -83,6 +83,19 @@ CodeArchaeology/
 
 ---
 
+## 왜 Code Archaeology인가?
+
+| 기존 도구 | 한계 |
+|----------|------|
+| VS 클래스 다이어그램 | 클래스를 수동으로 하나씩 추가해야 함 |
+| NDepend / Resharper | 유료, 팀 전체 도입 비용 |
+| Graphviz | DOT 언어를 직접 작성해야 함 |
+| UML 도구 | 코드와 다이어그램이 따로 관리되어 항상 불일치 |
+
+**Code Archaeology**: 폴더 선택 한 번 → 로컬에서 즉시 분석 → 항상 현재 코드 기준
+
+---
+
 ## 로드맵
 
 | Sprint | 목표 |
