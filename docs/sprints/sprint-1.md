@@ -79,7 +79,7 @@
 ### [S-09] MsaglRenderer + GViewer 연결
 - **상태**: ✅ 완료 (2026-03-13)
 - **결과**: MsaglRenderer 구현. 노드 사각형(클래스)/타원(인터페이스) 구분. GViewer Panel 동적 삽입. 줌/팬 동작 확인.
-- **이슈/결정**: 디자인(노드 색상, 엣지 스타일, 레이아웃 등) 은 S-EX-01 및 Sprint 2에서 완성 예정 (평가기준 UX 항목 대응)
+- **이슈/결정**: 디자인(노드 색상, 엣지 스타일, 레이아웃 등)은 S-EX-01 및 Sprint 2에서 완성 예정 (평가기준 UX 항목 대응)
 
 ---
 
@@ -107,24 +107,34 @@
 | 태스크 | 상태 | 메모 |
 |--------|------|------|
 | S-EX-01. 엣지 색상/스타일 구분 | ✅ 완료 | S-10에서 구현됨 (MsaglRenderer.cs:35-47) |
-| S-EX-02. 필드 타입 의존성 추출 | ✅ 완료 | |
+| S-EX-02. 필드 타입 의존성 추출 | ✅ 완료 | VisitFieldDeclaration() 추가 |
+| S-EX-07. 그래프 레이아웃 튜닝 + 범례 패널 | ✅ 완료 | 사용자 피드백 반영 — TB 레이아웃, 우상단 범례 오버레이 |
+| S-EX-03. 노드 라벨 네임스페이스 표시 | 예정 | |
+| S-EX-04. partial class 병합 | 예정 | |
+| S-EX-05. 비동기 처리 | 예정 | |
 
 ---
 
 ### [S-EX-01] 엣지 색상/스타일 구분
 - **상태**: ✅ 완료 (S-10에서 선구현, 2026-03-13)
-- **결과**: S-10(MsaglRenderer — 엣지 추가) 구현 시 엣지 색상/스타일 구분이 함께 적용됨. 상속(검정실선 `Color.Black`) / 인터페이스(파랑점선 `Color.Blue` + `DashStyle.Dash`) / 필드(회색실선 `Color.Gray`) 3종 구분 렌더링. Msagl.Drawing.Color와 System.Drawing.Color 네임스페이스 충돌 → 전체 경로 명시로 해결. `MsaglRenderer.cs` 35-47번 라인에 구현됨.
-- **이슈/결정**: S-09 계획 시 "디자인은 S-EX-01에서 완성 예정"으로 기록했으나, S-10 구현 중 엣지 스타일을 함께 처리하는 것이 자연스러워 즉시 구현. S-EX-01은 별도 태스크 없이 완료 처리.
+- **결과**: S-10 구현 시 엣지 색상/스타일 구분이 함께 적용됨. 상속(검정실선) / 인터페이스(파랑점선 `DashStyle.Dash`) / 필드(회색실선) 3종 구분 렌더링. Msagl.Drawing.Color와 System.Drawing.Color 네임스페이스 충돌 → 전체 경로 명시로 해결.
+- **이슈/결정**: S-09 계획 시 "S-EX-01에서 완성 예정"으로 기록했으나, S-10 구현 중 함께 처리. 별도 태스크 없이 완료.
 
 ---
 
 ### [S-EX-02] 필드 타입 의존성 추출
 - **상태**: ✅ 완료 (2026-03-13)
-- **결과**: `VisitFieldDeclaration()` + `ExtractTypeName()` 추가로 필드 선언에서 타입 의존성 추출 구현. `_currentClassName` 컨텍스트 추적으로 어느 클래스의 필드인지 파악. 5종 타입 패턴 처리: SimpleNameSyntax(일반), GenericNameSyntax(제네릭), QualifiedNameSyntax(정규화명), NullableTypeSyntax(nullable), ArrayTypeSyntax(배열). `PredefinedTypeSyntax`(int, string 등) 스킵. `GetEdges()`에 필드 엣지 생성 로직 추가 — 내부 타입 필터, 자기 자신 제외, HashSet 중복 제거. `Sample.cs`에 `Dog._friend: Cat` 케이스 추가. Dog→Cat 회색실선 엣지 UI 확인.
-- **이슈/결정**: `GenericNameSyntax`가 `SimpleNameSyntax`의 서브타입이라 switch expression 순서 오류 발생 → `GenericNameSyntax`를 먼저 처리하는 순서로 수정.
-| S-EX-03. 노드 라벨 네임스페이스 표시 | 예정 | |
-| S-EX-04. partial class 병합 | 예정 | |
-| S-EX-05. 비동기 처리 | 예정 | |
+- **결과**: `VisitFieldDeclaration()` + `ExtractTypeName()` 추가로 필드 선언에서 타입 의존성 추출 구현. `_currentClassName` 컨텍스트 추적. 5종 타입 패턴 처리: Simple/Generic/Qualified/Nullable/Array. `PredefinedTypeSyntax`(int, string 등) 스킵. `GetEdges()`에 내부 타입 필터·자기 참조 제외·중복 제거 적용. `Sample.cs`에 `Dog._friend: Cat` 케이스 추가 → Dog→Cat 회색실선 엣지 UI 확인.
+- **이슈/결정**: `GenericNameSyntax`가 `SimpleNameSyntax` 서브타입이라 switch expression 순서 오류 발생 → `GenericNameSyntax` 먼저 처리하도록 수정.
+
+---
+
+### [S-EX-07] 그래프 레이아웃 튜닝 + 범례 패널
+- **상태**: ✅ 완료 (2026-03-13, 사용자 피드백 반영)
+- **결과**:
+  - **레이아웃 방향 수정**: 기본 LR(좌→우) 배치 → TB(위→아래) 계층형으로 변경. `SugiyamaLayoutSettings`에 90도 회전 변환 행렬 `(0,-1,0,1,0,0)` 적용. 노드 간격 `NodeSeparation=20`, 레이어 간격 `LayerSeparation=40` 설정. 상속 계층이 위→아래로 자연스럽게 흐름.
+  - **범례 패널**: 그래프 우상단 오버레이 Panel 추가. 엣지 3종(상속/인터페이스 구현/필드 의존성)을 실제 선 색상·스타일로 렌더링하여 표시. `Controls.Clear()` 후 재추가 + `BringToFront()`로 GViewer 위에 항상 표시. `Anchor = Top|Right`로 창 크기 변경 시에도 우상단 고정.
+- **이슈/결정**: `PlaneTransformation.Rotation90DegreesClockwise` 정적 속성이 MSAGL 1.1.6에 없음 → 직접 변환 행렬로 대체.
 
 ---
 

@@ -55,12 +55,25 @@ partial class MainForm
         statusStrip.Items.Add(lblSpring);
         statusStrip.Items.Add(lblFolderPath);
 
+        // Legend Panel (그래프 우상단 오버레이, 분석 전에는 숨김)
+        pnlLegend = new Panel
+        {
+            Size = new Size(160, 100),
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Right,
+            Visible = false
+        };
+        pnlLegend.Paint += pnlLegend_Paint;
+        pnlGraph.Controls.Add(pnlLegend);
+
         Controls.Add(pnlGraph);
         Controls.Add(toolStrip);
         Controls.Add(statusStrip);
     }
 
     private Panel pnlGraph;
+    private Panel pnlLegend;
     private ToolStripStatusLabel lblStatus;
     private ToolStripStatusLabel lblError;
     private ToolStripStatusLabel lblFolderPath;

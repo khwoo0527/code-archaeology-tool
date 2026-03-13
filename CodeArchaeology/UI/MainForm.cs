@@ -49,6 +49,12 @@ public partial class MainForm : Form
             pnlGraph.Controls.Clear();
             pnlGraph.Controls.Add(gViewer);
 
+            // 범례 패널 재추가 (Controls.Clear() 이후 복원) 및 우상단 위치 고정
+            pnlLegend.Location = new Point(pnlGraph.ClientSize.Width - pnlLegend.Width - 12, 12);
+            pnlGraph.Controls.Add(pnlLegend);
+            pnlLegend.Visible = true;
+            pnlLegend.BringToFront();
+
             var classCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Class);
             var interfaceCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Interface);
             SetStatus($"분석 완료 — 클래스: {classCount}개 | 인터페이스: {interfaceCount}개 | .cs 파일: {files.Count}개");
@@ -60,6 +66,42 @@ public partial class MainForm : Form
         {
             Cursor = Cursors.Default;
         }
+    }
+
+    private void pnlLegend_Paint(object? sender, PaintEventArgs e)
+    {
+        var g = e.Graphics;
+        using var titleFont = new Font("Segoe UI", 8f, FontStyle.Bold);
+        using var labelFont = new Font("Segoe UI", 8f);
+
+        int x1 = 10, x2 = 42, xText = 50;
+        int y = 8;
+
+        g.DrawString("범  례", titleFont, Brushes.Black, x1, y);
+        y += 22;
+
+        // 상속: 검정 실선
+        using (var pen = new Pen(Color.Black, 2f))
+        {
+            g.DrawLine(pen, x1, y + 6, x2, y + 6);
+        }
+        g.DrawString("상속", labelFont, Brushes.Black, xText, y);
+        y += 22;
+
+        // 인터페이스 구현: 파랑 점선
+        using (var pen = new Pen(Color.Blue, 2f) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash })
+        {
+            g.DrawLine(pen, x1, y + 6, x2, y + 6);
+        }
+        g.DrawString("인터페이스 구현", labelFont, Brushes.Black, xText, y);
+        y += 22;
+
+        // 필드 의존성: 회색 실선
+        using (var pen = new Pen(Color.Gray, 2f))
+        {
+            g.DrawLine(pen, x1, y + 6, x2, y + 6);
+        }
+        g.DrawString("필드 의존성", labelFont, Brushes.Black, xText, y);
     }
 
     public void SetStatus(string message)

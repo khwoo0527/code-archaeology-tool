@@ -1,5 +1,6 @@
 using Microsoft.Msagl.Drawing;
 using Microsoft.Msagl.GraphViewerGdi;
+using Microsoft.Msagl.Layout.Layered;
 using CodeArchaeology.Models;
 
 namespace CodeArchaeology.Rendering;
@@ -8,7 +9,17 @@ public class MsaglRenderer
 {
     public GViewer BuildViewer(AnalysisResult result)
     {
-        var graph = new Graph("dependency");
+        var graph = new Graph("dependency")
+        {
+            // 위→아래(TB) 계층형 레이아웃: 상속 계층이 자연스럽게 위에서 아래로 흐름
+            LayoutAlgorithmSettings = new SugiyamaLayoutSettings
+            {
+                // 90도 회전 행렬로 LR→TB 전환: (cos90, -sin90, 0, sin90, cos90, 0) = (0, -1, 0, 1, 0, 0)
+                Transformation = new Microsoft.Msagl.Core.Geometry.Curves.PlaneTransformation(0, -1, 0, 1, 0, 0),
+                NodeSeparation = 20,
+                LayerSeparation = 40
+            }
+        };
 
         // 노드 이름 → FullName 역방향 조회를 위한 맵
         var nameToFullName = result.Nodes
