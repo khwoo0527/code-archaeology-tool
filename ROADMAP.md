@@ -230,7 +230,7 @@ public static IEnumerable<string> GetCsFiles(string folderPath)
 
 ---
 
-### - [ ] S-10. MsaglRenderer — 엣지 추가 `~30분`
+### - [x] S-10. MsaglRenderer — 엣지 추가 `~30분`
 
 **구현:**
 - `AnalysisResult.Edges` → `graph.AddEdge(source, target)`
