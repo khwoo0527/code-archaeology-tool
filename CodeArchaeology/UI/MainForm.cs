@@ -28,16 +28,21 @@ public partial class MainForm : Form
     private void RunAnalysis(string folderPath)
     {
         SetStatus("분석 중...");
-        // TODO S-11: 전체 파이프라인 연결 후 아래 임시 코드 제거
 
         var files = Analysis.FolderScanner.GetCsFiles(folderPath);
         var analyzer = new Analysis.RoslynAnalyzer();
         var result = analyzer.Analyze(files);
 
+        // 그래프 렌더링
+        var renderer = new Rendering.MsaglRenderer();
+        var gViewer = renderer.BuildViewer(result);
+
+        pnlGraph.Controls.Clear();
+        pnlGraph.Controls.Add(gViewer);
+
         var classCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Class);
         var interfaceCount = result.Nodes.Count(n => n.Kind == Models.TypeKind.Interface);
-        var edgeCount = result.Edges.Count;
-        SetStatus($"클래스: {classCount}개 | 인터페이스: {interfaceCount}개 | 관계: {edgeCount}개 | .cs 파일: {files.Count}개 | 에러: {result.Errors.Count}개");
+        SetStatus($"클래스: {classCount}개 | 인터페이스: {interfaceCount}개 | .cs 파일: {files.Count}개 | 에러: {result.Errors.Count}개");
     }
 
     public void SetStatus(string message)
