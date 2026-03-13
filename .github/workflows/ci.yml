@@ -21,10 +21,10 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore CodeArchaeology/CodeArchaeology.csproj
+        run: dotnet restore CodeArchaeology.sln
 
       - name: Build
-        run: dotnet build CodeArchaeology/CodeArchaeology.csproj --no-restore --configuration Release
+        run: dotnet build CodeArchaeology.sln --no-restore --configuration Release
 
       - name: Test
         run: dotnet test CodeArchaeology.Tests/CodeArchaeology.Tests.csproj --no-build --configuration Release --verbosity normal
