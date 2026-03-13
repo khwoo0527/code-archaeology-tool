@@ -362,6 +362,9 @@ public partial class MainForm : Form
 
     private void RebuildGraph(Models.AnalysisResult result)
     {
+        // 리빌드 전 줌/오프셋 저장 → 리빌드 후 복원
+        var savedZoom = _gViewer?.ZoomF ?? 0;
+
         var renderer = new Rendering.MsaglRenderer();
         _gViewer = renderer.BuildViewer(result, _currentSearch, _focusNodeId, _impactRootId, _impactSet, _codeSmellMode);
         _gViewer.ToolBarIsVisible = false;
@@ -393,6 +396,10 @@ public partial class MainForm : Form
         pnlGraph.Controls.Add(btnCodeSmell);
         btnCodeSmell.Visible = true;
         btnCodeSmell.BringToFront();
+
+        // 줌 복원 (0이면 최초 로드 — 기본값 유지)
+        if (savedZoom > 0)
+            _gViewer.ZoomF = savedZoom;
 
         // GViewer가 패널에 추가된 후 pan 상태 복원
         ApplyPanMode(_panToggled);
