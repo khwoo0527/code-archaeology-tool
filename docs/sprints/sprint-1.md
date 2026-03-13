@@ -110,7 +110,7 @@
 | S-EX-02. 필드 타입 의존성 추출 | ✅ 완료 | VisitFieldDeclaration() 추가 |
 | S-EX-07. 그래프 레이아웃 튜닝 + 범례 패널 | ✅ 완료 | 사용자 피드백 반영 — TB 레이아웃, 우상단 범례 오버레이 |
 | S-EX-03. 노드 라벨 네임스페이스 표시 | ✅ 완료 | |
-| S-EX-04. partial class 병합 | 예정 | |
+| S-EX-04. partial class 병합 | ✅ 완료 | |
 | S-EX-05. 비동기 처리 | 예정 | |
 
 ---
@@ -141,6 +141,13 @@
 ### [S-EX-03] 노드 라벨 네임스페이스 표시
 - **상태**: ✅ 완료 (2026-03-13)
 - **결과**: 노드 라벨을 기존 `ClassName` 단독 표기에서 `Namespace.ClassName` 전체 경로 형식으로 전환. `TypeNode.FullName` 프로퍼티(네임스페이스 없을 시 `Name` 단독 반환, 있을 시 `Namespace.Name` 반환)가 이미 구현되어 있어 `MsaglRenderer.cs`의 `LabelText` 할당 한 줄 변경으로 완료. 동일 클래스명이 여러 네임스페이스에 걸쳐 존재하는 대규모 프로젝트 분석 시 노드 식별 모호성이 제거됨.
+
+---
+
+### [S-EX-04] partial class 병합
+- **상태**: ✅ 완료 (2026-03-13)
+- **결과**: `partial class`가 여러 파일에 걸쳐 선언된 경우 파일별로 독립 노드가 생성되어 그래프에 동일 클래스가 중복 표시되던 문제를 해결. `Analyze()` 1단계(타입 수집) 완료 직후 `FullName` 기준 `GroupBy`로 동일 타입을 병합하고 `FieldCount`·`MethodCount`는 파일별 선언 합산으로 처리. 엣지 추출(기존 2단계)은 병합 후의 통합 노드 목록을 기준으로 수행하도록 단계 순서 조정. 검증용으로 `SamplePartial.cs`에 `partial class Dog { Fetch() }` 추가 — Sample.cs의 Dog(Speak)와 병합되어 단일 노드로 표시됨을 UI에서 확인.
+- **이슈/결정**: 병합 후 `FilePath`는 첫 번째 발견 파일 경로를 대표값으로 채택. 향후 툴팁 기능(P4-01) 구현 시 모든 partial 파일 경로 목록을 별도 보관하는 방향으로 확장 검토.
 
 ---
 

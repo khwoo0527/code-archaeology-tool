@@ -42,7 +42,24 @@ public class RoslynAnalyzer
             }
         }
 
-        // 2단계: 수집된 타입 목록 확정 후 엣지 추출 (내부 타입끼리만)
+        // 2단계: partial class 병합 — 동일 FullName 노드를 하나로 합산
+        // (FieldCount/MethodCount는 파일별 선언 합계, FilePath는 첫 번째 파일 기준)
+        var mergedNodes = result.Nodes
+            .GroupBy(n => n.FullName)
+            .Select(g => new TypeNode
+            {
+                Name = g.First().Name,
+                Namespace = g.First().Namespace,
+                FilePath = g.First().FilePath,
+                Kind = g.First().Kind,
+                FieldCount = g.Sum(n => n.FieldCount),
+                MethodCount = g.Sum(n => n.MethodCount)
+            })
+            .ToList();
+        result.Nodes.Clear();
+        result.Nodes.AddRange(mergedNodes);
+
+        // 3단계: 수집된 타입 목록 확정 후 엣지 추출 (내부 타입끼리만)
         var knownTypeNames = result.Nodes.Select(n => n.Name).ToHashSet();
         foreach (var walker in walkers)
         {
