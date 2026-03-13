@@ -83,32 +83,44 @@ public partial class MainForm : Form
         using var titleFont = new Font("Segoe UI", 8f, FontStyle.Bold);
         using var labelFont = new Font("Segoe UI", 8f);
 
-        int x1 = 10, x2 = 42, xText = 50;
+        int xBox = 10, xText = 50;
         int y = 8;
 
-        g.DrawString("범  례", titleFont, Brushes.Black, x1, y);
+        g.DrawString("범  례", titleFont, Brushes.Black, xBox, y);
+        y += 20;
+
+        // 클래스: 연파랑 사각형
+        g.FillRectangle(new SolidBrush(Color.FromArgb(210, 230, 255)), xBox, y, 30, 14);
+        g.DrawRectangle(new Pen(Color.FromArgb(30, 80, 160), 1.5f), xBox, y, 30, 14);
+        g.DrawString("클래스", labelFont, Brushes.Black, xText, y);
+        y += 20;
+
+        // 인터페이스: 연보라 타원
+        g.FillEllipse(new SolidBrush(Color.FromArgb(230, 210, 255)), xBox, y, 30, 14);
+        g.DrawEllipse(new Pen(Color.FromArgb(120, 60, 180), 1.5f), xBox, y, 30, 14);
+        g.DrawString("인터페이스", labelFont, Brushes.Black, xText, y);
         y += 22;
 
         // 상속: 검정 실선
         using (var pen = new Pen(Color.Black, 2f))
         {
-            g.DrawLine(pen, x1, y + 6, x2, y + 6);
+            g.DrawLine(pen, xBox, y + 6, xBox + 30, y + 6);
         }
         g.DrawString("상속", labelFont, Brushes.Black, xText, y);
-        y += 22;
+        y += 20;
 
         // 인터페이스 구현: 파랑 점선
         using (var pen = new Pen(Color.Blue, 2f) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash })
         {
-            g.DrawLine(pen, x1, y + 6, x2, y + 6);
+            g.DrawLine(pen, xBox, y + 6, xBox + 30, y + 6);
         }
         g.DrawString("인터페이스 구현", labelFont, Brushes.Black, xText, y);
-        y += 22;
+        y += 20;
 
         // 필드 의존성: 회색 실선
         using (var pen = new Pen(Color.Gray, 2f))
         {
-            g.DrawLine(pen, x1, y + 6, x2, y + 6);
+            g.DrawLine(pen, xBox, y + 6, xBox + 30, y + 6);
         }
         g.DrawString("필드 의존성", labelFont, Brushes.Black, xText, y);
     }

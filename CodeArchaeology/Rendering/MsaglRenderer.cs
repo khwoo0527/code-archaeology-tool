@@ -31,9 +31,20 @@ public class MsaglRenderer
             var drawingNode = graph.AddNode(node.FullName);
             drawingNode.LabelText = node.FullName;
 
-            drawingNode.Attr.Shape = node.Kind == TypeKind.Interface
-                ? Shape.Ellipse
-                : Shape.Box;
+            if (node.Kind == TypeKind.Interface)
+            {
+                // 인터페이스: 타원 + 연보라 배경 + 보라 테두리
+                drawingNode.Attr.Shape = Shape.Ellipse;
+                drawingNode.Attr.FillColor = new Microsoft.Msagl.Drawing.Color(230, 210, 255);
+                drawingNode.Attr.Color = new Microsoft.Msagl.Drawing.Color(120, 60, 180);
+            }
+            else
+            {
+                // 클래스: 사각형 + 연파랑 배경 + 네이비 테두리
+                drawingNode.Attr.Shape = Shape.Box;
+                drawingNode.Attr.FillColor = new Microsoft.Msagl.Drawing.Color(210, 230, 255);
+                drawingNode.Attr.Color = new Microsoft.Msagl.Drawing.Color(30, 80, 160);
+            }
         }
 
         foreach (var edge in result.Edges)

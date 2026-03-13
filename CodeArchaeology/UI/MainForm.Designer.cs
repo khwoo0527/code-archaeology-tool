@@ -58,7 +58,7 @@ partial class MainForm
         // Legend Panel (그래프 우상단 오버레이, 분석 전에는 숨김)
         pnlLegend = new Panel
         {
-            Size = new Size(160, 100),
+            Size = new Size(160, 140),
             BackColor = Color.White,
             BorderStyle = BorderStyle.FixedSingle,
             Anchor = AnchorStyles.Top | AnchorStyles.Right,
