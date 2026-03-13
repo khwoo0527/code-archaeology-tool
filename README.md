@@ -1,6 +1,7 @@
 # Code Archaeology
 
 [![CI](https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/khwoo0527/code-archaeology-tool/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/khwoo0527/code-archaeology-tool)](https://github.com/khwoo0527/code-archaeology-tool/releases/latest)
 
 > C# 프로젝트 폴더를 열면 Roslyn으로 클래스 구조와 의존성을 자동 분석하고,
 > Microsoft.Msagl 인터랙티브 그래프로 시각화하는 WinForms 데스크톱 도구
@@ -13,13 +14,9 @@
 
 ![main](docs/screenshots/main.png)
 
-### 코드 스멜 모드 — Ca 비례 노드 크기 + Instability 색상
+### 의존성 그래프 — 상속/인터페이스/필드 엣지 색상 구분 + 범례 패널
 
-![codesmell](docs/screenshots/codesmell.png)
-
-### 순환 의존성 감지 — 빨간 노드/엣지 강조
-
-![cycle](docs/screenshots/cycle.png)
+![graph](docs/screenshots/graph.png)
 
 > 스크린샷 폴더: `docs/screenshots/`
 
@@ -84,6 +81,12 @@
 
 - Windows 10 이상
 - [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+### 다운로드 (빌드 없이 바로 실행)
+
+**[최신 릴리스 다운로드 → v1.0.0](https://github.com/khwoo0527/code-archaeology-tool/releases/latest)**
+
+`CodeArchaeology.exe` 다운로드 후 직접 실행 (Windows 10+, .NET 8 Runtime 필요)
 
 ### 빌드 및 실행
 
