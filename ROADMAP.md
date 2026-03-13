@@ -91,7 +91,7 @@ UI Layer (WinForms)  -->  Analysis Layer (Roslyn)  -->  Model Layer (Graph)
 
 ---
 
-### - [ ] S-02. 폴더 구조 + MainForm 레이아웃 `~30분`
+### - [x] S-02. 폴더 구조 + MainForm 레이아웃 `~30분`
 
 **구현:**
 - 프로젝트 내 폴더 생성: `Models/`, `Analysis/`, `Rendering/`

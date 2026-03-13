@@ -4,3 +4,11 @@
 # 참고 문서 (로컬 전용)
 참고.txt
 평가기준.txt
+
+# .NET 빌드 산출물
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
